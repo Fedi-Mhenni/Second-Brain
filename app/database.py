@@ -10,6 +10,7 @@ Ce module centralise tout ce qui touche à la base de données :
 
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -18,9 +19,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Charge les variables du fichier .env dans l'environnement du processus.
 load_dotenv()
 
-# URL de connexion. Par défaut : un fichier ``second_brain.db`` à la racine du projet.
-# Chaque membre du binôme a ainsi sa propre base locale (cf. cadrage : une instance par personne).
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./second_brain.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/second_brain.db")
+
+Path("data").mkdir(exist_ok=True)
 
 # ``check_same_thread=False`` est spécifique à SQLite : par défaut SQLite interdit
 # d'utiliser une connexion depuis un autre thread que celui qui l'a créée, or FastAPI

@@ -1,0 +1,58 @@
+"""Modèle ``Source`` : une ressource captée (une URL) et son avancement dans le workflow.
+
+Workflow : Capter -> Qualifier -> Ranger -> Digérer -> Republier.
+Chaque étape se traduit par une valeur de ``statut`` sur la Source.
+"""
+
+from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy.orm import relationship
+
+from app.database import Base, utcnow
+
+# Les cinq états possibles d'une Source, dans l'ordre du workflow.
+# On stocke la valeur en texte ; cette constante sert de référence pour la
+# validation, qui se fera dans la couche service (pas dans le modèle).
+STATUTS = ("captured", "qualified", "ranged", "digested", "published")
+
+
+class Source(Base):
+    __tablename__ = "sources"
+
+    id = Column(Integer, primary_key=True)
+
+    # L'URL captée, cœur de l'entité.
+    # ``unique=True``  : on n'enregistre jamais deux fois la même source.
+    # ``index=True``   : recherche rapide par URL (pour tester si elle existe déjà).
+    # ``nullable=False`` : une Source sans URL n'a pas de sens.
+    url = Column(String(2048), unique=True, index=True, nullable=False)
+
+    # Titre de la page, récupéré lors du fetch : inconnu au moment où on colle l'URL.
+    titre = Column(String(512), nullable=True)
+
+    # Texte brut extrait de la page. ``Text`` (et non ``String``) car potentiellement long.
+    contenu_brut = Column(Text, nullable=True)
+
+    # Étape courante dans le workflow. Voir la constante STATUTS ci-dessus.
+    # ``default="captured"`` : une Source naît toujours à l'étape « captée ».
+    statut = Column(String(20), nullable=False, default="captured")
+
+    # Dossier de rangement (étape 3) : nul tant que la source n'est pas rangée.
+    # Simple colonne entière pour l'instant : la table ``folders`` n'existe pas
+    # encore, la vraie clé étrangère sera ajoutée avec le modèle Folder.
+    folder_id = Column(Integer, nullable=True)
+
+    # Suivi temporel. ``default`` est appelé à la création, ``onupdate`` à chaque
+    # modification de la ligne. On passe la fonction ``utcnow`` (sans parenthèses) :
+    # SQLAlchemy l'appellera lui-même au bon moment.
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    # Relation un-à-un vers l'Article issu de cette Source.
+    # ``uselist=False`` : ``source.article`` renvoie un seul objet (ou None), pas une liste.
+    # ``back_populates`` : tient les deux côtés de la relation synchronisés.
+    # La chaîne "Article" évite d'importer la classe ici (résolue par SQLAlchemy).
+    article = relationship("Article", back_populates="source", uselist=False)
+
+    def __repr__(self) -> str:
+        # Affichage lisible dans les logs et le shell Python. ``!r`` = repr de la valeur.
+        return f"<Source id={self.id} statut={self.statut!r} url={self.url!r}>"

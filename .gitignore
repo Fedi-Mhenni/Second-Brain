@@ -197,8 +197,10 @@ __marimo__/
 *.sqlite
 *.sqlite3
 
-# Local application data
-/data/
+# Local application data — la base SQLite vit ici (dossier monté en volume),
+# on versionne le dossier mais jamais les bases qu'il contient.
+/data/*.db
+!/data/.gitkeep
 
 # Docker local overrides
 docker-compose.override.yml
@@ -220,3 +222,4 @@ Thumbs.db
 
 #claude 
 claude.md
+cadrage.md

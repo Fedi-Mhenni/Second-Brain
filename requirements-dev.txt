@@ -1,0 +1,5 @@
+# Dépendances de développement uniquement (tests). Non installées dans l'image Docker.
+# Usage : pip install -r requirements-dev.txt  (récupère aussi requirements.txt)
+-r requirements.txt
+
+pytest

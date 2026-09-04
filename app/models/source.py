@@ -4,7 +4,7 @@ Workflow : Capter -> Qualifier -> Ranger -> Digérer -> Republier.
 Chaque étape se traduit par une valeur de ``statut`` sur la Source.
 """
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base, utcnow
@@ -37,9 +37,8 @@ class Source(Base):
     statut = Column(String(20), nullable=False, default="captured")
 
     # Dossier de rangement (étape 3) : nul tant que la source n'est pas rangée.
-    # Simple colonne entière pour l'instant : la table ``folders`` n'existe pas
-    # encore, la vraie clé étrangère sera ajoutée avec le modèle Folder.
-    folder_id = Column(Integer, nullable=True)
+    # ``ForeignKey("folders.id")`` : contrainte de clé étrangère vers la table ``folders``.
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True)
 
     # Suivi temporel. ``default`` est appelé à la création, ``onupdate`` à chaque
     # modification de la ligne. On passe la fonction ``utcnow`` (sans parenthèses) :
@@ -56,6 +55,9 @@ class Source(Base):
     # ``back_populates`` : tient les deux côtés de la relation synchronisés.
     # La chaîne "Article" évite d'importer la classe ici (résolue par SQLAlchemy).
     article = relationship("Article", back_populates="source", uselist=False)
+
+    # Le dossier où la Source est rangée (None tant qu'elle ne l'est pas).
+    folder = relationship("Folder", back_populates="sources")
 
     def __repr__(self) -> str:
         # Affichage lisible dans les logs et le shell Python. ``!r`` = repr de la valeur.

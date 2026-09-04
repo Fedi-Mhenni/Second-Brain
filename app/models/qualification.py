@@ -1,5 +1,13 @@
 """Modèle ``Qualification`` : évaluation d'une Source à l'étape « Qualifier ».
 
+Table séparée plutôt que des colonnes ajoutées directement sur ``Source`` :
+la qualification est une donnée qui n'existe qu'à partir d'une étape précise
+du workflow (elle est vide avant, potentiellement corrigée après), exactement
+comme ``Article`` est séparé de ``Source`` pour l'étape Digérer. Ça évite
+d'avoir une table ``Source`` qui porte des colonnes vides pendant la majeure
+partie de la vie de la ligne, et ça garde une frontière claire : une table
+par étape du pipeline.
+
 Relation 1-1 avec Source. Alimentée soit par l'IA soit manuellement
 (``qualified_by``) ; validation du champ ``categorie`` faite en couche
 service (pas dans le modèle), même logique que ``Source.STATUTS``.
@@ -20,8 +28,16 @@ QUALIFIED_BY = ("ai", "manual")
 class Qualification(Base):
     __tablename__ = "qualifications"
     __table_args__ = (
-        # Champs remplis par l'IA : on borne en base pour ne jamais accepter
-        # une valeur hors échelle, même en cas de bug côté appelant.
+        # legitimite/interet sont remplis par l'IA : on ne contrôle donc pas
+        # leur valeur au moment de l'écriture comme on le ferait pour une
+        # saisie utilisateur passée par un formulaire. La contrainte vit en
+        # base plutôt que dans le seul service appelant pour rester valable
+        # quel que soit le point d'entrée qui écrit la ligne (service de
+        # qualification futur, script de seed, requête manuelle, bug dans le
+        # parsing de la réponse IA) : la base refuse la valeur hors échelle
+        # dans tous les cas, elle ne fait pas confiance à l'appelant.
+        # ``IS NULL OR`` : indispensable, sinon la contrainte interdirait
+        # aussi l'état « pas encore qualifié » (legitimite/interet à NULL).
         CheckConstraint(
             "legitimite IS NULL OR legitimite BETWEEN 1 AND 5",
             name="ck_qualification_legitimite_range",

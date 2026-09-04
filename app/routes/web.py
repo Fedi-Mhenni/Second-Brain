@@ -1,10 +1,23 @@
 """Routes HTML server-rendered : dashboard, formulaire de capture, liste des sources.
 
-Ces routes ne portent aucune logique métier : elles appellent les services
-existants (``app.services.capture``), puis rendent un template ou
-redirigent. L'API JSON de ``app/routes/capture.py`` reste inchangée — ces
-routes web vivent sur des chemins distincts (``POST /capture`` ici, contre
-``POST /capture/url`` et ``POST /capture/note`` côté API JSON).
+Pourquoi un fichier séparé de ``app/routes/capture.py`` plutôt que d'ajouter
+ces routes au même router : les deux fichiers servent deux contrats et deux
+publics différents qui ne doivent pas se contraindre l'un l'autre.
+``capture.py`` est une API JSON (corps et réponses typés par des modèles
+Pydantic, codes 201/409, pensée pour un client programmatique) ; ce fichier
+sert des pages HTML à un navigateur (formulaires ``multipart/form-data``,
+réponses de redirection 303). Les mélanger dans un même router obligerait
+soit à dupliquer chaque route en deux versions, soit à faire porter à une
+seule route la négociation de contenu (JSON vs HTML) — plus complexe pour un
+gain nul ici. Les deux fichiers restent alignés parce qu'ils appellent les
+mêmes fonctions de service (``app.services.capture``) : la logique de
+capture n'existe qu'à un seul endroit, seule la façon de la présenter change.
+
+Ces routes elles-mêmes ne portent aucune logique métier (règle de
+CLAUDE.md) : chaque route appelle le service puis rend un template ou
+redirige, rien de plus. ``POST /capture`` (ici) et ``POST /capture/url`` /
+``POST /capture/note`` (API JSON) sont des chemins distincts par
+construction : aucun risque de collision de route entre les deux fichiers.
 """
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -20,7 +33,13 @@ router = APIRouter()
 
 
 def _templates(request: Request) -> Jinja2Templates:
-    """Récupère l'instance Jinja2Templates configurée dans ``app/main.py``."""
+    """Récupère l'instance Jinja2Templates configurée dans ``app/main.py``.
+
+    Passe par ``request.app.state`` plutôt que d'instancier Jinja2Templates
+    ici : une seule instance pour toute l'application (voir le commentaire
+    dans main.py), et ça évite d'avoir à importer main.py depuis ce module
+    alors que main.py importe déjà ce module pour brancher son router.
+    """
     return request.app.state.templates
 
 

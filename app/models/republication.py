@@ -1,8 +1,16 @@
 """Modèle ``Republication`` : brouillon de republication d'une Source.
 
-Une Source peut donner lieu à plusieurs Republications (canaux et postures
-différents). La republication reste toujours un brouillon éditable : aucune
-publication automatique (décision actée, voir docs/CADRAGE.md).
+Table séparée de Source (comme Article et Qualification) : republier n'est
+pas un état unique mais un ensemble de tentatives indépendantes — le
+cadrage demande explicitement de pouvoir republier une même Source sur
+plusieurs canaux et dans plusieurs postures (personal branding *et*
+entreprise). Une seule ligne par Source ne pourrait pas porter ça ; une table
+à part avec ``source_id`` en clé étrangère (non unique) le permet nativement.
+
+``brouillon`` reste toujours un texte éditable, jamais publié
+automatiquement : décision actée du cadrage (délai de validation des API
+LinkedIn/X trop long pour le projet) — la vraie publication se fait à la
+main, par copier/coller, depuis ce brouillon.
 """
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
@@ -25,7 +33,9 @@ class Republication(Base):
 
     id = Column(Integer, primary_key=True)
 
-    # Une Source peut avoir plusieurs Republications -> pas d'unicité ici.
+    # Volontairement pas ``unique=True`` (contrairement à Article/Qualification) :
+    # c'est ce qui permet plusieurs Republications pour une même Source, voir
+    # docstring du module.
     source_id = Column(Integer, ForeignKey("sources.id"), nullable=False)
 
     canal = Column(String(20), nullable=True)

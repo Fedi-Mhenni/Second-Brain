@@ -18,11 +18,22 @@ async def lifespan(app: FastAPI):
 # ``lifespan=lifespan`` : on branche le gestionnaire ci-dessus sur l'application.
 app = FastAPI(title="Second Brain", lifespan=lifespan)
 
-# Rendu Jinja2, exposé aux routes via ``request.app.state.templates``
-# (voir ``app/routes/web.py``) pour éviter tout import circulaire avec main.py.
+# Jinja2Templates est un simple objet de rendu (pas une sous-application
+# ASGI) : il n'y a rien à "monter", juste une instance à partager. Elle est
+# posée sur ``app.state`` — le mécanisme standard FastAPI/Starlette pour
+# exposer un singleton à l'échelle de l'application — plutôt que créée
+# directement dans app/routes/web.py ou importée depuis main.py : les deux
+# alternatives forceraient soit une deuxième instance (donc un risque de
+# configuration qui diverge si on ajoute des filtres Jinja plus tard), soit
+# un import circulaire (main.py importe déjà web.py pour brancher son
+# router). Les routes y accèdent via ``request.app.state.templates``
+# (voir ``app/routes/web.py``).
 app.state.templates = Jinja2Templates(directory="app/templates")
 
-# Fichiers statiques (CSS) servis sous /static.
+# StaticFiles, à l'inverse, EST une sous-application ASGI : il faut la
+# monter avec ``app.mount()`` sur un préfixe d'URL (/static) pour qu'elle
+# prenne la main sur les requêtes de ce préfixe et serve les fichiers du
+# dossier app/static/ (ici, la feuille de style unique demandée).
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Branche les routes de capture (POST /capture/url, POST /capture/note — API JSON)

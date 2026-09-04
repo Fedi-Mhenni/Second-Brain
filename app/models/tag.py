@@ -1,8 +1,12 @@
 """Modèle ``Tag`` : étiquette libre applicable aux Articles.
 
-Le lien vers Article passe par ``ArticleTag`` (association explicite, voir ce
-module) : pas de many-to-many implicite, on veut pouvoir savoir qui a ajouté
-chaque tag (``added_by``).
+Table indépendante (pas de colonne "tags" sur Article) car un tag est
+réutilisable d'un article à l'autre par nature (ex. "IA générative" doit
+pouvoir qualifier plusieurs articles) : le many-to-many est donc la seule
+modélisation cohérente. Le lien vers Article passe par ``ArticleTag``
+(association explicite, voir ce module et son docstring) plutôt que par un
+many-to-many implicite, pour pouvoir tracer qui a ajouté chaque tag
+(``added_by``).
 """
 
 from sqlalchemy import Column, DateTime, Integer, String

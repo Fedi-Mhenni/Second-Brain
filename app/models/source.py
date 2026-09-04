@@ -61,12 +61,15 @@ class Source(Base):
     folder = relationship("Folder", back_populates="sources")
 
     # Relation un-à-un vers la Qualification de cette Source (étape Qualifier).
+    # ``uselist=False`` car Qualification.source_id est unique (voir ce modèle) :
+    # même raison que pour ``article`` ci-dessus.
     qualification = relationship(
         "Qualification", back_populates="source", uselist=False
     )
 
     # Une Source peut donner lieu à plusieurs Republications (canaux/postures
-    # différents) -> relation un-à-plusieurs, pas de ``uselist=False`` ici.
+    # différents, voir Republication) -> relation un-à-plusieurs : pas de
+    # ``uselist=False``, ``source.republications`` renvoie une liste.
     republications = relationship("Republication", back_populates="source")
 
     def __repr__(self) -> str:

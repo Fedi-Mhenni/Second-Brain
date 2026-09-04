@@ -45,7 +45,10 @@ class Article(Base):
     source = relationship("Source", back_populates="article")
 
     # Tags de l'article, via l'association explicite ArticleTag (porte
-    # ``added_by``) -> pas de relation many-to-many directe vers Tag.
+    # ``added_by``, voir ce modèle) -> pas de relation many-to-many directe
+    # vers Tag, sinon l'ORM ne donnerait plus accès à cette métadonnée.
+    # Le rangement par tags porte sur l'Article (contenu retravaillé), pas
+    # sur la Source brute : on tague ce qui a été digéré, pas la page brute.
     article_tags = relationship("ArticleTag", back_populates="article")
 
     def __repr__(self) -> str:

@@ -9,6 +9,7 @@ services:
     volumes:
       - ./app:/app/app
       - ./data:/app/data
-      # Monté pour que les tests édités en local soient vus sans rebuild
-      # (pytest et requirements-dev.txt sont, eux, déjà dans l'image).
+      # Montés pour être vus sans rebuild lors de l'itération locale
+      # (ils sont aussi copiés dans l'image, cf. Dockerfile).
       - ./tests:/app/tests
+      - ./scripts:/app/scripts

@@ -1,8 +1,11 @@
 """Service de l'étape « Capter ».
 
-Toute la logique métier de la capture vit ici : appel HTTP vers la page, extraction
-du titre et du contenu principal, puis création d'une ``Source`` en base. La route
-``POST /capture/url`` ne fait que valider l'URL reçue et appeler ``capture_url``.
+Deux points d'entrée :
+- ``capture_url``  : télécharge une page, en extrait titre + contenu, crée une Source ;
+- ``capture_note`` : enregistre directement un texte libre (aucun accès réseau).
+
+Les routes ``POST /capture/url`` et ``POST /capture/note`` ne font que valider
+l'entrée et appeler la fonction correspondante.
 """
 
 from dataclasses import dataclass
@@ -26,6 +29,9 @@ _TIMEOUT = httpx.Timeout(10.0)
 # Longueur maximale de texte conservée : au-delà, ça n'aide pas la qualification
 # et ça alourdit la base pour rien.
 _MAX_CONTENU = 50_000
+
+# Longueur max du titre dérivé automatiquement du texte d'une note.
+_TITRE_MAX = 120
 
 
 @dataclass
@@ -140,3 +146,36 @@ def capture_url(db: Session, url: str) -> tuple[Source, FetchResult]:
 
     db.refresh(source)
     return source, result
+
+
+def _titre_depuis_texte(texte: str) -> str | None:
+    """Fabrique un titre lisible à partir du texte d'une note.
+
+    Normalise les espaces (les sauts de ligne deviennent des espaces) et garde
+    les ``_TITRE_MAX`` premiers caractères, avec « … » si le texte était plus long.
+    """
+    resume = " ".join(texte.split())
+    if not resume:
+        return None
+    if len(resume) <= _TITRE_MAX:
+        return resume
+    return resume[:_TITRE_MAX].rstrip() + "…"
+
+
+def capture_note(db: Session, texte: str) -> Source:
+    """Capte une note libre : enregistre une ``Source`` sans URL ni fetch.
+
+    ``contenu_brut`` reçoit le texte tel quel (après ``strip``), ``titre`` un
+    extrait de ses premiers mots, ``statut`` vaut ``captured``. Retourne la Source.
+    """
+    texte = texte.strip()
+    source = Source(
+        url=None,
+        titre=_titre_depuis_texte(texte),
+        contenu_brut=texte,
+        statut="captured",
+    )
+    db.add(source)
+    db.commit()
+    db.refresh(source)
+    return source

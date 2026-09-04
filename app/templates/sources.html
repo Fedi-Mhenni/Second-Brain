@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Sources — Second Brain{% endblock %}
+{% block content %}
+    <h1>Sources</h1>
+
+    {% if not sources %}
+        <p class="vide">
+            Aucune source capturée pour l'instant.
+            <a href="/capture">Capturer une première source</a>.
+        </p>
+    {% else %}
+        <ul class="liste-sources">
+            {% for source in sources %}
+                <li>
+                    <span class="badge badge-{{ source.statut }}">{{ source.statut }}</span>
+                    <span class="titre">{{ source.titre or source.url or "(sans titre)" }}</span>
+                    {% if source.url %}
+                        <a class="lien" href="{{ source.url }}" target="_blank" rel="noopener">{{ source.url }}</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

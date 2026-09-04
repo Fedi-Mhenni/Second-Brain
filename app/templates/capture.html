@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Capturer — Second Brain{% endblock %}
+{% block content %}
+    <h1>Capturer</h1>
+
+    {% if erreur == "deja_captee" %}
+        <p class="erreur">Cette URL a déjà été captée.</p>
+    {% endif %}
+
+    <section class="formulaire">
+        <h2>Depuis une URL</h2>
+        <form method="post" action="/capture">
+            <input type="url" name="url" placeholder="https://…" required>
+            <button type="submit">Capter l'URL</button>
+        </form>
+    </section>
+
+    <section class="formulaire">
+        <h2>Note libre</h2>
+        <form method="post" action="/capture">
+            <textarea name="texte" rows="4" placeholder="Votre note…" required></textarea>
+            <button type="submit">Capter la note</button>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Second Brain{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+    <header class="entete">
+        <a class="marque" href="/">Second Brain</a>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/capture">Capturer</a>
+            <a href="/sources">Sources</a>
+        </nav>
+    </header>
+    <main class="contenu">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

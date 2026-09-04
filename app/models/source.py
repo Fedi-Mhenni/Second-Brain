@@ -44,8 +44,12 @@ class Source(Base):
     # Suivi temporel. ``default`` est appelé à la création, ``onupdate`` à chaque
     # modification de la ligne. On passe la fonction ``utcnow`` (sans parenthèses) :
     # SQLAlchemy l'appellera lui-même au bon moment.
-    created_at = Column(DateTime, nullable=False, default=utcnow)
-    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    # ``DateTime(timezone=True)`` : la colonne garde le fuseau (les valeurs de
+    # ``utcnow`` sont en UTC) ; portable vers un SGBD qui gère les timestamps avec fuseau.
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
+    )
 
     # Relation un-à-un vers l'Article issu de cette Source.
     # ``uselist=False`` : ``source.article`` renvoie un seul objet (ou None), pas une liste.

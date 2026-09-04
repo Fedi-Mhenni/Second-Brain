@@ -23,13 +23,15 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/second_brain.db")
 
 Path("data").mkdir(exist_ok=True)
 
-# ``check_same_thread=False`` est spécifique à SQLite : par défaut SQLite interdit
+# ``check_same_thread=False`` ne concerne que SQLite : par défaut SQLite interdit
 # d'utiliser une connexion depuis un autre thread que celui qui l'a créée, or FastAPI
-# peut traiter les requêtes sur plusieurs threads. On lève donc cette restriction.
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
+# peut traiter les requêtes sur plusieurs threads. Sur un autre SGBD, cet argument
+# n'existe pas -> on ne le passe que si l'URL est une URL SQLite.
+connect_args = (
+    {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 )
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 # Fabrique de sessions. ``autocommit``/``autoflush`` à False = comportement explicite :
 # rien n'est écrit dans la base tant qu'on n'appelle pas ``commit()``.

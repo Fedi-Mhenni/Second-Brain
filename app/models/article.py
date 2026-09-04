@@ -35,9 +35,11 @@ class Article(Base):
     # Résumé produit à l'étape Digérer.
     resume = Column(Text, nullable=True)
 
-    # Suivi temporel (même logique que sur Source).
-    created_at = Column(DateTime, nullable=False, default=utcnow)
-    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    # Suivi temporel (même logique que sur Source, colonnes avec fuseau).
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
+    )
 
     # Accès inverse : depuis un Article, ``article.source`` renvoie la Source liée.
     source = relationship("Source", back_populates="article")

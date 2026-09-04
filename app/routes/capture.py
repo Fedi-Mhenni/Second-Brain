@@ -1,11 +1,13 @@
-"""Endpoint de l'étape « Capter » : ``POST /capture/url``."""
+"""Endpoints de l'étape « Capter » : ``POST /capture/url`` et ``POST /capture/note``."""
+
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, StringConstraints
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.capture import UrlDejaCaptee, capture_url
+from app.services.capture import UrlDejaCaptee, capture_note, capture_url
 
 # ``prefix`` : toutes les routes de ce fichier commencent par /capture.
 # ``tags`` : regroupe ces routes sous « capture » dans la doc /docs.
@@ -62,3 +64,34 @@ def capture_url_route(payload: CaptureUrlIn, db: Session = Depends(get_db)):
         fetched=result.ok,
         fetch_error=result.error,
     )
+
+
+class CaptureNoteIn(BaseModel):
+    """Corps de la requête : le texte libre à enregistrer comme note."""
+
+    # ``strip_whitespace`` + ``min_length=1`` : un texte vide ou fait uniquement
+    # d'espaces est refusé par FastAPI (422), on n'a pas à le vérifier nous-mêmes.
+    texte: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+class CaptureNoteOut(BaseModel):
+    """Réponse : la Source créée (sans renvoyer le texte complet)."""
+
+    id: int
+    titre: str | None
+    statut: str
+
+
+@router.post(
+    "/note",
+    response_model=CaptureNoteOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def capture_note_route(payload: CaptureNoteIn, db: Session = Depends(get_db)):
+    """Capte une note libre : enregistre une ``Source`` au statut ``captured``.
+
+    Aucun accès réseau : le texte est stocké tel quel dans ``contenu_brut`` et le
+    ``titre`` est un extrait de ses premiers mots.
+    """
+    source = capture_note(db, payload.texte)
+    return CaptureNoteOut(id=source.id, titre=source.titre, statut=source.statut)

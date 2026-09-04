@@ -20,11 +20,12 @@ class Source(Base):
 
     id = Column(Integer, primary_key=True)
 
-    # L'URL captée, cœur de l'entité.
-    # ``unique=True``  : on n'enregistre jamais deux fois la même source.
+    # L'URL captée, pour une Source issue d'une page web.
+    # ``nullable=True`` : une note libre (POST /capture/note) n'a pas d'URL.
+    # ``unique=True``  : jamais deux fois la même URL ; plusieurs NULL restent permis
+    #                    (SQLite comme PostgreSQL traitent les NULL comme distincts).
     # ``index=True``   : recherche rapide par URL (pour tester si elle existe déjà).
-    # ``nullable=False`` : une Source sans URL n'a pas de sens.
-    url = Column(String(2048), unique=True, index=True, nullable=False)
+    url = Column(String(2048), unique=True, index=True, nullable=True)
 
     # Titre de la page, récupéré lors du fetch : inconnu au moment où on colle l'URL.
     titre = Column(String(512), nullable=True)

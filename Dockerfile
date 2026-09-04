@@ -2,11 +2,15 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Dépendances prod (requirements.txt) + dev/tests (requirements-dev.txt).
+# Copiées avant le code pour profiter du cache de couches Docker.
+COPY requirements.txt requirements-dev.txt ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+# On installe les deux : l'image peut ainsi lancer l'app ET pytest, sans étape manuelle.
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 
 COPY app ./app
+COPY tests ./tests
 
 EXPOSE 8000
 

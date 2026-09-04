@@ -44,5 +44,9 @@ class Article(Base):
     # Accès inverse : depuis un Article, ``article.source`` renvoie la Source liée.
     source = relationship("Source", back_populates="article")
 
+    # Tags de l'article, via l'association explicite ArticleTag (porte
+    # ``added_by``) -> pas de relation many-to-many directe vers Tag.
+    article_tags = relationship("ArticleTag", back_populates="article")
+
     def __repr__(self) -> str:
         return f"<Article id={self.id} source_id={self.source_id}>"

@@ -60,6 +60,15 @@ class Source(Base):
     # Le dossier où la Source est rangée (None tant qu'elle ne l'est pas).
     folder = relationship("Folder", back_populates="sources")
 
+    # Relation un-à-un vers la Qualification de cette Source (étape Qualifier).
+    qualification = relationship(
+        "Qualification", back_populates="source", uselist=False
+    )
+
+    # Une Source peut donner lieu à plusieurs Republications (canaux/postures
+    # différents) -> relation un-à-plusieurs, pas de ``uselist=False`` ici.
+    republications = relationship("Republication", back_populates="source")
+
     def __repr__(self) -> str:
         # Affichage lisible dans les logs et le shell Python. ``!r`` = repr de la valeur.
         return f"<Source id={self.id} statut={self.statut!r} url={self.url!r}>"

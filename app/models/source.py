@@ -67,11 +67,6 @@ class Source(Base):
         "Qualification", back_populates="source", uselist=False
     )
 
-    # Une Source peut donner lieu à plusieurs Republications (canaux/postures
-    # différents, voir Republication) -> relation un-à-plusieurs : pas de
-    # ``uselist=False``, ``source.republications`` renvoie une liste.
-    republications = relationship("Republication", back_populates="source")
-
     def __repr__(self) -> str:
         # Affichage lisible dans les logs et le shell Python. ``!r`` = repr de la valeur.
         return f"<Source id={self.id} statut={self.statut!r} url={self.url!r}>"

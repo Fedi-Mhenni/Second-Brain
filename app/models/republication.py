@@ -1,11 +1,20 @@
-"""Modèle ``Republication`` : brouillon de republication d'une Source.
+"""Modèle ``Republication`` : brouillon de republication d'une Source digérée.
 
 Table séparée de Source (comme Article et Qualification) : republier n'est
 pas un état unique mais un ensemble de tentatives indépendantes — le
 cadrage demande explicitement de pouvoir republier une même Source sur
 plusieurs canaux et dans plusieurs postures (personal branding *et*
 entreprise). Une seule ligne par Source ne pourrait pas porter ça ; une table
-à part avec ``source_id`` en clé étrangère (non unique) le permet nativement.
+à part avec ``article_id`` en clé étrangère (non unique) le permet nativement.
+
+Rattachée à ``Article`` plutôt qu'à ``Source`` (retour de review) : le
+workflow impose Capter → Qualifier → Ranger → Digérer → Republier, et
+Article n'existe qu'une fois la Source digérée (voir app/models/article.py).
+En pointant vers Article plutôt que Source, le schéma rend impossible de
+créer une Republication avant digestion — la contrainte d'ordre des étapes
+est donc portée par la structure de la base (une clé étrangère qui n'existe
+pas encore tant que l'Article n'est pas créé), pas par une vérification
+ajoutée dans le code applicatif qu'on pourrait oublier ou contourner.
 
 ``brouillon`` reste toujours un texte éditable, jamais publié
 automatiquement : décision actée du cadrage (délai de validation des API
@@ -34,9 +43,10 @@ class Republication(Base):
     id = Column(Integer, primary_key=True)
 
     # Volontairement pas ``unique=True`` (contrairement à Article/Qualification) :
-    # c'est ce qui permet plusieurs Republications pour une même Source, voir
-    # docstring du module.
-    source_id = Column(Integer, ForeignKey("sources.id"), nullable=False)
+    # c'est ce qui permet plusieurs Republications pour un même Article, voir
+    # docstring du module. FK vers ``articles.id`` (pas ``sources.id``) : voir
+    # docstring du module pour la raison (contrainte d'ordre du workflow).
+    article_id = Column(Integer, ForeignKey("articles.id"), nullable=False)
 
     canal = Column(String(20), nullable=True)
 
@@ -52,10 +62,10 @@ class Republication(Base):
         DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
     )
 
-    source = relationship("Source", back_populates="republications")
+    article = relationship("Article", back_populates="republications")
 
     def __repr__(self) -> str:
         return (
-            f"<Republication id={self.id} source_id={self.source_id} "
+            f"<Republication id={self.id} article_id={self.article_id} "
             f"canal={self.canal!r} statut={self.statut!r}>"
         )

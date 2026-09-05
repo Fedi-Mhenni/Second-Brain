@@ -44,7 +44,9 @@ def _templates(request: Request) -> Jinja2Templates:
 
 
 @router.get("/")
-def dashboard(request: Request, db: Session = Depends(get_db)):
+def dashboard_route(request: Request, db: Session = Depends(get_db)):
+    # Lecture directe sans passer par un service : un comptage brut pour
+    # affichage n'est pas une décision métier, juste une projection.
     total = db.query(Source).count()
     return _templates(request).TemplateResponse(
         request, "dashboard.html", {"total": total}
@@ -52,7 +54,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/sources")
-def liste_sources(request: Request, db: Session = Depends(get_db)):
+def liste_sources_route(request: Request, db: Session = Depends(get_db)):
+    # Idem : lister/trier pour affichage n'est pas de la logique métier.
     sources = db.query(Source).order_by(Source.created_at.desc()).all()
     return _templates(request).TemplateResponse(
         request, "sources.html", {"sources": sources}
@@ -60,14 +63,14 @@ def liste_sources(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/capture")
-def formulaire_capture(request: Request, erreur: str | None = None):
+def formulaire_capture_route(request: Request, erreur: str | None = None):
     return _templates(request).TemplateResponse(
         request, "capture.html", {"erreur": erreur}
     )
 
 
 @router.post("/capture")
-def soumettre_capture(
+def soumettre_capture_route(
     db: Session = Depends(get_db),
     url: str = Form(default=""),
     texte: str = Form(default=""),

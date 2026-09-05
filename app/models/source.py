@@ -38,7 +38,6 @@ class Source(Base):
     statut = Column(String(20), nullable=False, default="captured")
 
     # Dossier de rangement (étape 3) : nul tant que la source n'est pas rangée.
-    # ``ForeignKey("folders.id")`` : contrainte de clé étrangère vers la table ``folders``.
     folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True)
 
     # Suivi temporel. ``default`` est appelé à la création, ``onupdate`` à chaque

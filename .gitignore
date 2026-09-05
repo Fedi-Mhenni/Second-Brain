@@ -184,7 +184,7 @@ __marimo__/
 
 
 # ==========================================
-# SECOND BRAIN - Project specific
+# VEILLEFLOW - Project specific
 # ==========================================
 
 # Environment / secrets
@@ -220,3 +220,6 @@ Thumbs.db
 *.tmp
 *.temp
 
+#claude 
+claude.md
+cadrage.md

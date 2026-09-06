@@ -1,16 +1,17 @@
 """Service de l'étape « Digérer ».
 
-Crée ou met à jour l'Article lié à une Source (relation un-à-un). Le résumé
-et le contenu sont écrits à la main pour l'instant (pas d'IA : LLMProvider
-n'existe pas encore) ; seuls les champs fournis sont modifiés, les autres
-gardent leur valeur existante (utile pour compléter un Article en plusieurs
-appels).
+Deux points d'entrée :
+- ``digerer_source`` : upsert manuel de l'Article ; l'appelant fournit
+  titre/contenu/resume, seuls les champs fournis sont modifiés.
+- ``digerer_source_auto`` : génère le résumé via ``LLMProvider`` à partir du
+  ``contenu_brut`` de la Source, puis réutilise ``digerer_source``.
 """
 
 from sqlalchemy.orm import Session
 
 from app.models import Article, Source
 from app.models.source import STATUTS
+from app.services.llm_provider import get_llm_provider
 
 
 class SourceIntrouvable(Exception):
@@ -94,3 +95,40 @@ def digerer_source(
     db.commit()
     db.refresh(article)
     return article
+
+
+def digerer_source_auto(db: Session, source_id: int) -> tuple[Article, str]:
+    """Digère une Source automatiquement : le résumé est généré par un ``LLMProvider``.
+
+    Charge la Source (404 sinon), refuse si son ``contenu_brut`` est vide ou
+    blanc (même rejet que la digestion manuelle), demande un résumé au
+    fournisseur LLM courant, puis **délègue à ``digerer_source``** en passant
+    ``contenu_brut`` comme contenu et le résumé généré comme ``resume`` :
+    l'upsert de l'Article et l'avancement de statut ne sont pas réécrits ici.
+
+    Retourne ``(article, nom_du_provider)``. Le nom ("GeminiProvider" ou
+    "MockProvider") n'est pas stocké : il sert à l'appelant à savoir si le
+    résumé vient d'un vrai appel Gemini ou d'un repli Mock.
+
+    Lève ``SourceIntrouvable`` si la Source n'existe pas, ``AucunContenuFourni``
+    si son ``contenu_brut`` est vide.
+    """
+    source = db.get(Source, source_id)
+    if source is None:
+        raise SourceIntrouvable(source_id)
+
+    if _nettoie(source.contenu_brut) is None:
+        raise AucunContenuFourni()
+
+    provider = get_llm_provider()
+    # ``or ""`` : ``resumer`` attend un ``str`` et ``Source.titre`` peut être None.
+    resume = provider.resumer(titre=source.titre or "", contenu=source.contenu_brut)
+
+    article = digerer_source(
+        db,
+        source_id,
+        titre=source.titre,
+        contenu=source.contenu_brut,
+        resume=resume,
+    )
+    return article, type(provider).__name__

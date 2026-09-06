@@ -2,7 +2,8 @@
 
 - ``GET  /sources``                  — listing, filtres ``?statut=`` / ``?folder_id=``
 - ``PATCH /sources/{id}/folder``     — Ranger : rattache la Source à un Folder
-- ``POST  /sources/{id}/digest``     — Digérer : crée/met à jour l'Article lié
+- ``POST  /sources/{id}/digest``     — Digérer (manuel) : crée/met à jour l'Article lié
+- ``POST  /sources/{id}/digest/auto`` — Digérer (auto) : résumé généré par LLMProvider
 - ``POST  /sources/{id}/qualification`` — Qualifier : crée/met à jour la Qualification
 
 ``SourceIntrouvable`` existe dans deux services (``ranger`` et ``digerer``) et
@@ -22,6 +23,7 @@ from app.services.digerer import (
     AucunContenuFourni,
     SourceIntrouvable as SourceIntrouvableDigest,
     digerer_source,
+    digerer_source_auto,
 )
 from app.services.qualifier import qualifier_source
 from app.services.ranger import (
@@ -70,6 +72,16 @@ class ArticleOut(BaseModel):
     titre: str | None
     contenu: str | None
     resume: str | None
+
+
+class ArticleAutoOut(ArticleOut):
+    """Comme ``ArticleOut``, plus le nom du provider LLM ayant produit le résumé.
+
+    ``provider`` est transitoire (pas une colonne) : "GeminiProvider" si le vrai
+    appel Gemini a réussi, "MockProvider" en repli (ou si aucune clé n'est configurée).
+    """
+
+    provider: str
 
 
 class QualifierSourceIn(BaseModel):
@@ -197,6 +209,39 @@ def digerer_source_route(
         titre=article.titre,
         contenu=article.contenu,
         resume=article.resume,
+    )
+
+
+@router.post(
+    "/{source_id}/digest/auto",
+    response_model=ArticleAutoOut,
+    status_code=status.HTTP_200_OK,
+)
+def digerer_source_auto_route(source_id: int, db: Session = Depends(get_db)):
+    """Digère la Source automatiquement : résumé généré par le ``LLMProvider`` courant.
+
+    Aucun body. 404 si la Source n'existe pas, 400 si son ``contenu_brut`` est
+    vide (voir ``app.services.digerer``). Réutilise l'upsert et l'avancement de
+    statut de la digestion manuelle.
+    """
+    try:
+        article, provider = digerer_source_auto(db, source_id)
+    except SourceIntrouvableDigest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
+        )
+    except AucunContenuFourni:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Aucun contenu à digérer"
+        )
+
+    return ArticleAutoOut(
+        id=article.id,
+        source_id=article.source_id,
+        titre=article.titre,
+        contenu=article.contenu,
+        resume=article.resume,
+        provider=provider,
     )
 
 

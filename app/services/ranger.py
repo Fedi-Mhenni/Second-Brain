@@ -9,7 +9,7 @@ digérée ou republiée ne doit pas la faire reculer dans le workflow.
 from sqlalchemy.orm import Session
 
 from app.models import Folder, Source
-from app.models.source import STATUTS
+from app.models.source import avancer_statut
 
 
 class SourceIntrouvable(Exception):
@@ -51,11 +51,9 @@ def ranger_source(db: Session, source_id: int, folder_id: int) -> Source:
 
     source.folder_id = folder_id
 
-    # ``STATUTS.index(x)`` = position de x dans l'ordre du workflow : plus
-    # petit = plus tôt. On n'avance le statut que si on n'a pas déjà dépassé
-    # l'étape "ranged" (ex. une Source "digested" reste "digested").
-    if STATUTS.index(source.statut) < STATUTS.index("ranged"):
-        source.statut = "ranged"
+    # Règle d'avancement commune aux trois services (Ranger/Qualifier/Digérer) :
+    # voir avancer_statut (app/models/source.py).
+    avancer_statut(source, "ranged")
 
     # Pas besoin de toucher updated_at à la main : ``onupdate=utcnow`` (sur
     # le modèle Source) le fait tout seul dès que la ligne modifiée est commitée.

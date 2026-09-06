@@ -15,6 +15,27 @@ from app.database import Base, utcnow
 STATUTS = ("captured", "qualified", "ranged", "digested", "published")
 
 
+def avancer_statut(source: "Source", etape: str) -> None:
+    """Fait avancer ``source.statut`` vers ``etape`` si l'étape actuelle la précède.
+
+    Le statut d'une Source ne recule jamais : l'ordre du workflow (Capter ->
+    Qualifier -> Ranger -> Digérer -> Republier) est une invariante du
+    projet, pas une règle propre à un service. Si on la laissait dupliquée
+    dans chaque service (Ranger, Qualifier, Digérer...), rien n'empêcherait
+    qu'une des copies diverge un jour (ex. un ``<=`` au lieu d'un ``<`` qui
+    laisserait une Source régresser). En la centralisant ici, à côté de
+    ``STATUTS`` dont elle dépend, il n'existe qu'une seule définition de
+    "avant" à maintenir.
+
+    ``STATUTS.index(x)`` = position de x dans l'ordre du workflow : plus
+    petit = plus tôt. On n'avance que si l'étape actuelle est strictement
+    avant ``etape`` (ex. une Source "digested" à qui on refait un
+    ``avancer_statut(source, "qualified")`` reste "digested").
+    """
+    if STATUTS.index(source.statut) < STATUTS.index(etape):
+        source.statut = etape
+
+
 class Source(Base):
     __tablename__ = "sources"
 

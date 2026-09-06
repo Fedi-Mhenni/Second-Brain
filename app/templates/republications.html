@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Mes republications — Second Brain{% endblock %}
+{% block content %}
+    <div class="page-liste">
+        <h1>Mes republications</h1>
+
+        {% if not republications %}
+            <p class="vide">Aucune republication pour l'instant.</p>
+        {% else %}
+            <ul class="liste-republications">
+                {% for republication in republications %}
+                    <li>
+                        <a
+                            class="carte-source__titre-lien"
+                            href="/republications/{{ republication.id }}"
+                        >{{ republication.canal }} — {{ republication.posture }}</a>
+                        <span class="badge badge-{{ republication.statut }}">{{ republication.statut }}</span>
+                        <span class="section-fiche__meta">{{ republication.created_at.strftime("%d/%m/%Y") }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}

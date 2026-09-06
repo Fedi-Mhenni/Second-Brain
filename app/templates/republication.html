@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}Republication {{ republication.canal }} — Second Brain{% endblock %}
+{% block content %}
+    <div class="page-fiche">
+        <p><a href="/liste/{{ republication.article.source_id }}">&larr; Retour à la source</a></p>
+
+        <div class="fiche__entete">
+            <h1>Republication {{ republication.canal }}</h1>
+            <span class="badge badge-{{ republication.statut }}">{{ republication.statut }}</span>
+        </div>
+
+        <p class="section-fiche__meta">Posture : {{ republication.posture }}</p>
+        <p class="section-fiche__meta">Créée le {{ republication.created_at.strftime("%d/%m/%Y") }}</p>
+
+        <section class="section-fiche">
+            <div class="champ">
+                <label for="brouillon">Brouillon</label>
+                <textarea id="brouillon" rows="10">{{ republication.brouillon }}</textarea>
+            </div>
+
+            <button type="button" id="bouton-copier" class="bouton">Copier</button>
+            <span id="confirmation-copie" class="section-fiche__meta" hidden>Copié dans le presse-papiers !</span>
+
+            {% if republication.statut == "draft" %}
+                <form method="post" action="/republications/{{ republication.id }}/publier">
+                    <button type="submit" class="bouton">Marquer comme publiée</button>
+                </form>
+            {% endif %}
+        </section>
+    </div>
+
+    {# JS minimal, inline, sans bibliothèque : copie le contenu courant du
+       textarea (donc les éventuelles modifications manuelles) vers le
+       presse-papiers, puis affiche une confirmation temporaire. Aucun appel
+       réseau ici — la publication réelle reste un copier/coller manuel sur
+       LinkedIn/X (décision actée au cadrage). #}
+    <script>
+        document.getElementById("bouton-copier").addEventListener("click", function () {
+            var brouillon = document.getElementById("brouillon");
+            navigator.clipboard.writeText(brouillon.value).then(function () {
+                var confirmation = document.getElementById("confirmation-copie");
+                confirmation.hidden = false;
+                setTimeout(function () {
+                    confirmation.hidden = true;
+                }, 2000);
+            });
+        });
+    </script>
+{% endblock %}

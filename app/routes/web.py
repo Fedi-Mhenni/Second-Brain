@@ -32,7 +32,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Source
+from app.models import Republication, Source
 from app.services.capture import (
     SchemaUrlNonAutorise,
     UrlDejaCaptee,
@@ -51,6 +51,11 @@ from app.services.ranger import (
     FolderIntrouvable,
     SourceIntrouvable as SourceIntrouvableRanger,
     ranger_source,
+)
+from app.services.republier import (
+    RepublicationIntrouvable,
+    publier_republication,
+    republier_article,
 )
 
 router = APIRouter()
@@ -211,6 +216,70 @@ def fiche_digerer_manuel_route(
         )
 
     return RedirectResponse(f"/liste/{source_id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/republier")
+def fiche_republier_route(
+    source_id: int,
+    db: Session = Depends(get_db),
+    canal: Literal["linkedin", "x"] = Form(...),
+    posture: Literal["personal_branding", "entreprise"] = Form(...),
+    brouillon: str = Form(...),
+):
+    """Crée un brouillon de Republication pour l'Article de cette Source.
+
+    N'existe que si la Source a un Article (le formulaire n'est rendu que
+    dans ce cas, voir fiche_source.html) : 404 direct sinon, pas besoin de
+    passer par ``republier_article``/``ArticleIntrouvable`` pour un cas que
+    l'UI n'expose jamais. Redirige vers la page de la republication créée,
+    pas vers la fiche, pour enchaîner directement sur copier/publier.
+    """
+    source = db.get(Source, source_id)
+    if source is None or source.article is None:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    republication = republier_article(
+        db, source.article.id, canal=canal, brouillon=brouillon, posture=posture
+    )
+    return RedirectResponse(f"/republications/{republication.id}", status_code=303)
+
+
+@router.get("/republications")
+def liste_republications_route(request: Request, db: Session = Depends(get_db)):
+    # Lecture directe (pas de service) : lister/trier pour affichage n'est
+    # pas de la logique métier, même raisonnement que liste_sources_route.
+    republications = (
+        db.query(Republication).order_by(Republication.created_at.desc()).all()
+    )
+    return _templates(request).TemplateResponse(
+        request, "republications.html", {"republications": republications}
+    )
+
+
+@router.get("/republications/{republication_id}")
+def republication_route(
+    republication_id: int, request: Request, db: Session = Depends(get_db)
+):
+    republication = db.get(Republication, republication_id)
+    if republication is None:
+        raise HTTPException(status_code=404, detail="Republication introuvable")
+
+    return _templates(request).TemplateResponse(
+        request, "republication.html", {"republication": republication}
+    )
+
+
+@router.post("/republications/{republication_id}/publier")
+def republication_publier_route(
+    republication_id: int, db: Session = Depends(get_db)
+):
+    """Marque la Republication comme publiée (publication manuelle, pas d'API)."""
+    try:
+        publier_republication(db, republication_id)
+    except RepublicationIntrouvable:
+        raise HTTPException(status_code=404, detail="Republication introuvable")
+
+    return RedirectResponse(f"/republications/{republication_id}", status_code=303)
 
 
 @router.get("/capture")

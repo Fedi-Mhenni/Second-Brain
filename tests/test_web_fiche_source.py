@@ -5,7 +5,7 @@ ici on vérifie seulement le branchement HTML (code retour, redirection, 404),
 pas la logique métier elle-même.
 """
 
-from app.models import Folder, Qualification, Source
+from app.models import Article, Folder, Qualification, Republication, Source
 from app.services.llm_provider import MockProvider
 
 
@@ -135,4 +135,185 @@ def test_fiche_digerer_manuel(client, test_db):
     source = db.get(Source, source_id)
     assert source.article.resume == "Mon résumé manuel."
     assert source.statut == "digested"
+    db.close()
+
+
+# ---------------------------------------------------------------------------
+# Chemins d'erreur : chaque cas vérifie le code retour ET l'absence d'effet
+# de bord (rien créé/modifié en base, statut de la Source inchangé).
+# ---------------------------------------------------------------------------
+
+
+def test_fiche_ranger_folder_introuvable_404(client, test_db):
+    """Folder_id valide (un entier) mais qui ne correspond à aucun Folder."""
+    source_id = _creer_source(test_db)
+
+    r = client.post(
+        f"/liste/{source_id}/ranger",
+        data={"folder_id": "999999"},
+        follow_redirects=False,
+    )
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Folder introuvable"
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.folder_id is None
+    assert source.statut == "captured"
+    db.close()
+
+
+def test_fiche_ranger_folder_id_invalide_422(client, test_db):
+    """Folder_id qui n'est même pas un entier : rejeté par FastAPI avant le service."""
+    source_id = _creer_source(test_db)
+
+    r = client.post(
+        f"/liste/{source_id}/ranger",
+        data={"folder_id": "pas-un-nombre"},
+        follow_redirects=False,
+    )
+
+    assert r.status_code == 422
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.folder_id is None
+    assert source.statut == "captured"
+    db.close()
+
+
+def test_fiche_ranger_source_introuvable_404(client, test_db):
+    folder_id = _creer_folder(test_db)
+
+    r = client.post(f"/liste/999999/ranger", data={"folder_id": str(folder_id)})
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+
+def test_fiche_digerer_auto_sans_contenu_brut(client, test_db, monkeypatch):
+    """Aucun contenu_brut à digérer : redirection avec erreur, rien créé.
+
+    Le service vérifie l'absence de contenu avant tout appel au LLMProvider
+    (voir app/services/digerer.py) : monkeypatch posé ici par prudence, pas
+    parce que le provider est réellement sollicité sur ce chemin.
+    """
+    monkeypatch.setattr(
+        "app.services.digerer.get_llm_provider", lambda: MockProvider()
+    )
+    source_id = _creer_source(test_db, contenu_brut=None)
+
+    r = client.post(f"/liste/{source_id}/digerer/auto", follow_redirects=False)
+
+    assert r.status_code == 303
+    assert r.headers["location"] == f"/liste/{source_id}?erreur=aucun_contenu"
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.article is None
+    assert source.statut == "captured"
+    db.close()
+
+
+def test_fiche_digerer_auto_source_introuvable_404(client, test_db):
+    r = client.post("/liste/999999/digerer/auto")
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(Article).count() == 0
+    db.close()
+
+
+def test_fiche_digerer_manuel_resume_vide_sans_article(client, test_db):
+    """Résumé blanc, aucun Article existant : redirection avec erreur, aucun Article créé."""
+    source_id = _creer_source(test_db)
+
+    r = client.post(
+        f"/liste/{source_id}/digerer", data={"resume": "   "}, follow_redirects=False
+    )
+
+    assert r.status_code == 303
+    assert r.headers["location"] == f"/liste/{source_id}?erreur=resume_vide"
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.article is None
+    assert source.statut == "captured"
+    db.close()
+
+
+def test_fiche_digerer_manuel_resume_vide_avec_article_existant(client, test_db):
+    """Résumé blanc envoyé sur une Source déjà digérée : le résumé existant n'est pas écrasé."""
+    source_id = _creer_source(test_db)
+    db = test_db()
+    source = db.get(Source, source_id)
+    source.statut = "digested"
+    db.add(Article(source_id=source_id, resume="Résumé déjà enregistré."))
+    db.commit()
+    db.close()
+
+    r = client.post(
+        f"/liste/{source_id}/digerer", data={"resume": ""}, follow_redirects=False
+    )
+
+    assert r.status_code == 303
+    assert r.headers["location"] == f"/liste/{source_id}?erreur=resume_vide"
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.article.resume == "Résumé déjà enregistré."
+    assert source.statut == "digested"
+    db.close()
+
+
+def test_fiche_digerer_source_introuvable_404(client, test_db):
+    r = client.post("/liste/999999/digerer", data={"resume": "Un résumé."})
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(Article).count() == 0
+    db.close()
+
+
+def test_fiche_qualifier_source_introuvable_404(client, test_db):
+    r = client.post(
+        "/liste/999999/qualifier",
+        data={"categorie": "pro", "legitimite": "4", "interet": "5"},
+    )
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(Qualification).count() == 0
+    db.close()
+
+
+def test_fiche_qualifier_auto_source_introuvable_404(client, test_db):
+    r = client.post("/liste/999999/qualifier/auto")
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(Qualification).count() == 0
+    db.close()
+
+
+def test_fiche_republier_source_introuvable_404(client, test_db):
+    r = client.post(
+        "/liste/999999/republier",
+        data={"canal": "linkedin", "posture": "personal_branding", "brouillon": "x"},
+    )
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(Republication).count() == 0
     db.close()

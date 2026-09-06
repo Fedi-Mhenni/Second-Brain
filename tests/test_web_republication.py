@@ -84,14 +84,9 @@ def test_fiche_republier_sans_article_404(client, test_db):
     assert r.status_code == 404
     assert r.json()["detail"] == "Source introuvable"
 
-
-def test_fiche_republier_source_introuvable_404(client):
-    r = client.post(
-        "/liste/999999/republier",
-        data={"canal": "linkedin", "posture": "personal_branding", "brouillon": "x"},
-    )
-
-    assert r.status_code == 404
+    db = test_db()
+    assert db.query(Republication).count() == 0
+    db.close()
 
 
 def test_republication_detail_200(client, test_db):
@@ -141,11 +136,39 @@ def test_republication_publier_ne_recule_pas_le_statut(client, test_db):
     db.close()
 
 
-def test_republication_publier_introuvable_404(client):
+def test_republication_publier_introuvable_404(client, test_db):
     r = client.post("/republications/999999/publier")
 
     assert r.status_code == 404
     assert r.json()["detail"] == "Republication introuvable"
+
+    db = test_db()
+    assert db.query(Republication).count() == 0
+    db.close()
+
+
+def test_republication_publier_deja_publiee(client, test_db):
+    """Republier une Republication déjà "published" : idempotent, pas de doublon.
+
+    Ni ``publier_republication`` (statut réaffecté à la même valeur) ni
+    ``avancer_statut`` (ne recule/ré-avance jamais) ne traitent ce cas comme
+    une erreur : ce test fige ce comportement volontairement permissif.
+    """
+    source_id, article_id = _creer_source_avec_article(test_db, statut="published")
+    republication_id = _creer_republication(test_db, article_id, statut="published")
+
+    r = client.post(
+        f"/republications/{republication_id}/publier", follow_redirects=False
+    )
+
+    assert r.status_code == 303
+
+    db = test_db()
+    assert db.query(Republication).filter_by(article_id=article_id).count() == 1
+    republication = db.get(Republication, republication_id)
+    assert republication.statut == "published"
+    assert db.get(Source, source_id).statut == "published"
+    db.close()
 
 
 def test_liste_republications_200(client, test_db):

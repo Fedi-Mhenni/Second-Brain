@@ -5,6 +5,8 @@
 
     {% if erreur == "deja_captee" %}
         <p class="erreur">Cette URL a déjà été captée.</p>
+    {% elif erreur == "schema_invalide" %}
+        <p class="erreur">Seules les URL http:// ou https:// sont acceptées.</p>
     {% endif %}
 
     <section class="formulaire">

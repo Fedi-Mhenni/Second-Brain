@@ -98,16 +98,17 @@ textarea:focus-visible {
 }
 
 /* ==========================================================================
-   DESIGN SYSTEM — appliqué uniquement à /liste (app/templates/sources.html),
-   le temps que le coéquipier valide la direction avant généralisation.
-   Les classes de mise en page (.page-liste, .cartes-sources, .carte-source*)
-   sont scopées sous .page-liste : aucune ne touche aux classes existantes
-   ci-dessus (.entete, .contenu, .formulaire, etc.), donc les autres pages ne
-   changent pas visuellement.
-   Exception volontaire : .badge et .bouton restent des classes globales,
-   PAS scopées sous .page-liste. Elles seront généralisées à tout le reste
-   de l'application dans une prochaine étape ; les scoper ici pour devoir les
-   sortir de .page-liste ensuite serait du travail jeté.
+   DESIGN SYSTEM — variables et classes globales à toute l'application :
+   rien ci-dessous n'est techniquement limité à une page (``.page-liste``
+   scope seulement deux surcharges ponctuelles, ``h1`` et ``.vide`` ; toutes
+   les autres classes, ``.carte-source*`` comme ``.badge``/``.bouton``, sont
+   de simples sélecteurs globaux).
+   Ce qui est volontairement restreint, c'est leur USAGE : seul
+   app/templates/sources.html référence ces classes aujourd'hui, le temps
+   que le coéquipier valide la direction visuelle sur une seule page avant
+   qu'on généralise leur usage au reste de l'application. Rien n'empêche un
+   autre template de les utiliser dès maintenant ; simplement, aucun ne le
+   fait encore, donc aucune autre page ne change visuellement pour l'instant.
    La police Inter est chargée via <link> dans app/templates/layout.html
    (preconnect + feuille de style Google Fonts), pas via @import ici :
    @import bloque et sérialise la requête après le chargement de ce
@@ -182,10 +183,12 @@ textarea:focus-visible {
     font-size: var(--taille-titre);
     font-weight: 600;
     margin: 0;
-    /* min-width:0 + word-break : un titre long se coupe au lieu de forcer
-       la carte à déborder quand la fenêtre se réduit. */
+    /* min-width:0 + overflow-wrap : un titre long se coupe au lieu de forcer
+       la carte à déborder quand la fenêtre se réduit. ``overflow-wrap``
+       (standard) plutôt que ``word-break: break-word`` (valeur non standard,
+       héritée d'un ancien comportement de word-break jamais spécifié). */
     min-width: 0;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .carte-source__meta {
@@ -207,8 +210,8 @@ textarea:focus-visible {
    affiché en texte, voir sources.html) ; la couleur du texte ne sert qu'à
    renforcer la lecture rapide. Ratios de contraste texte/fond calculés
    (WCAG AA, seuil 4.5:1) : voir le tableau fourni séparément.
-   Classe globale, volontairement PAS sous .page-liste : voir l'en-tête de
-   cette section. */
+   Classe globale (voir l'en-tête de cette section) : appelée à être
+   réutilisée telle quelle une fois le design system généralisé. */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -251,9 +254,8 @@ textarea:focus-visible {
 }
 
 /* Bouton du design system : pas encore utilisé sur /liste (page en lecture
-   seule), posé ici pour que la classe existe dès la généralisation.
-   Classe globale, volontairement PAS sous .page-liste (même raison que
-   .badge ci-dessus). */
+   seule), posé ici pour que la classe existe dès la généralisation. Classe
+   globale, même raison que .badge ci-dessus. */
 .bouton {
     display: inline-block;
     font-family: var(--police);

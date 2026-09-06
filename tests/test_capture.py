@@ -8,8 +8,10 @@ que ``raise_for_status()`` se comporte exactement comme en production.
 """
 
 import httpx
+import pytest
 
 from app.models import Source
+from app.services.capture import SchemaUrlNonAutorise, capture_url
 
 
 def _mock_httpx_get(monkeypatch, *, response=None, exception=None):
@@ -104,3 +106,17 @@ def test_capture_url_invalide(client):
     r = client.post("/capture/url", json={"url": "pas-une-url"})
 
     assert r.status_code == 422
+
+
+def test_capture_url_schema_javascript_rejete(test_db):
+    """Un schéma autre que http/https (ex. javascript:) est rejeté par le
+    service lui-même, pas seulement par la validation Pydantic de la route
+    JSON : c'est ce qui protège aussi le formulaire HTML, qui ne passe pas
+    par ``HttpUrl`` (voir app/routes/web.py).
+    """
+    db = test_db()
+    with pytest.raises(SchemaUrlNonAutorise):
+        capture_url(db, "javascript:alert(1)")
+
+    assert db.query(Source).count() == 0
+    db.close()

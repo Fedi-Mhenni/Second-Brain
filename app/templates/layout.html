@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Second Brain{% endblock %}</title>
+    <!--
+        Police Inter via Google Fonts : choix explicite du coéquipier (design
+        system), conservé tel quel. Conséquence assumée : le rendu des pages
+        dépend de fonts.googleapis.com/fonts.gstatic.com — si ces domaines
+        sont injoignables, la police ne charge pas mais la page reste
+        lisible et utilisable (repli sur la pile système déclarée dans
+        --police, voir app/static/style.css), rien ne casse.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link

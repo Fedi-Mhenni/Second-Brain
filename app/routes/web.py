@@ -31,7 +31,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models import Source
-from app.services.capture import UrlDejaCaptee, capture_note, capture_url
+from app.services.capture import (
+    SchemaUrlNonAutorise,
+    UrlDejaCaptee,
+    capture_note,
+    capture_url,
+)
 
 router = APIRouter()
 
@@ -102,6 +107,11 @@ def soumettre_capture_route(
             # Cas d'échec géré explicitement : on repasse par le formulaire
             # avec un indicateur d'erreur plutôt que de laisser planter.
             return RedirectResponse("/capture?erreur=deja_captee", status_code=303)
+        except SchemaUrlNonAutorise:
+            # Le formulaire envoie une chaîne brute, sans la validation
+            # Pydantic ``HttpUrl`` de l'API JSON : c'est le service qui
+            # protège ce chemin (voir app/services/capture.py).
+            return RedirectResponse("/capture?erreur=schema_invalide", status_code=303)
     elif texte.strip():
         capture_note(db, texte.strip())
 

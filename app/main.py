@@ -22,7 +22,7 @@ app.include_router(capture.router)
 # Branche la route de listing des dossiers (GET /folders).
 app.include_router(folders.router)
 
-# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder).
+# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder, POST /sources/{id}/digest).
 app.include_router(sources.router)
 
 

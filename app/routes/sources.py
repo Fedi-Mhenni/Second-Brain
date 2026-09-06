@@ -1,11 +1,29 @@
-"""Endpoints « sources » : ``GET /sources`` (listing) et ``PATCH /sources/{id}/folder`` (Ranger)."""
+"""Endpoints « sources » regroupés sous ``prefix="/sources"`` :
+
+- ``GET  /sources``               — listing, filtres ``?statut=`` / ``?folder_id=``
+- ``PATCH /sources/{id}/folder``  — Ranger : rattache la Source à un Folder
+- ``POST  /sources/{id}/digest``  — Digérer : crée/met à jour l'Article lié
+
+``SourceIntrouvable`` existe dans deux services (``ranger`` et ``digerer``) et
+n'a pas été fusionné (hors périmètre) : on importe les deux, avec alias, et
+chaque route attrape celle de son propre service.
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.ranger import FolderIntrouvable, SourceIntrouvable, ranger_source
+from app.services.digerer import (
+    AucunContenuFourni,
+    SourceIntrouvable as SourceIntrouvableDigest,
+    digerer_source,
+)
+from app.services.ranger import (
+    FolderIntrouvable,
+    SourceIntrouvable as SourceIntrouvableRanger,
+    ranger_source,
+)
 from app.services.sources import lister_sources
 
 router = APIRouter(prefix="/sources", tags=["sources"])
@@ -17,6 +35,18 @@ class RangerSourceIn(BaseModel):
     folder_id: int
 
 
+class DigestSourceIn(BaseModel):
+    """Corps de la requête de digestion : les champs de l'Article à écrire.
+
+    Les trois sont optionnels ; un champ absent (ou vide) ne modifie pas la
+    valeur déjà enregistrée. Au moins un des trois doit porter du contenu réel.
+    """
+
+    titre: str | None = None
+    contenu: str | None = None
+    resume: str | None = None
+
+
 class SourceOut(BaseModel):
     """Une Source telle que renvoyée par l'API (sans son contenu, potentiellement volumineux)."""
 
@@ -25,6 +55,16 @@ class SourceOut(BaseModel):
     titre: str | None
     statut: str
     folder_id: int | None
+
+
+class ArticleOut(BaseModel):
+    """Réponse de la digestion : l'Article tel qu'il vient d'être créé/mis à jour."""
+
+    id: int
+    source_id: int
+    titre: str | None
+    contenu: str | None
+    resume: str | None
 
 
 @router.get("", response_model=list[SourceOut])
@@ -69,7 +109,7 @@ def ranger_source_route(
     """
     try:
         source = ranger_source(db, source_id, payload.folder_id)
-    except SourceIntrouvable:
+    except SourceIntrouvableRanger:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
         )
@@ -84,4 +124,44 @@ def ranger_source_route(
         titre=source.titre,
         statut=source.statut,
         folder_id=source.folder_id,
+    )
+
+
+@router.post(
+    "/{source_id}/digest",
+    response_model=ArticleOut,
+    status_code=status.HTTP_200_OK,
+)
+def digerer_source_route(
+    source_id: int, payload: DigestSourceIn, db: Session = Depends(get_db)
+):
+    """Crée ou met à jour l'Article lié à la Source, avance son statut si besoin.
+
+    404 si la Source n'existe pas, 400 si les trois champs sont vides
+    (voir ``app.services.digerer``).
+    """
+    try:
+        article = digerer_source(
+            db,
+            source_id,
+            titre=payload.titre,
+            contenu=payload.contenu,
+            resume=payload.resume,
+        )
+    except SourceIntrouvableDigest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
+        )
+    except AucunContenuFourni:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aucun contenu fourni pour la digestion",
+        )
+
+    return ArticleOut(
+        id=article.id,
+        source_id=article.source_id,
+        titre=article.titre,
+        contenu=article.contenu,
+        resume=article.resume,
     )

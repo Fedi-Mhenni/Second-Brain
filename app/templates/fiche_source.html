@@ -160,12 +160,47 @@
                 <ul class="liste-republications">
                     {% for republication in source.article.republications %}
                         <li>
-                            {{ republication.canal }} — {{ republication.posture }} — {{ republication.statut }}
+                            <a
+                                class="carte-source__titre-lien"
+                                href="/republications/{{ republication.id }}"
+                            >{{ republication.canal }} — {{ republication.posture }} — {{ republication.statut }}</a>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
                 <p class="vide">Aucune republication pour l'instant.</p>
+            {% endif %}
+
+            {% if source.article %}
+                {# Brouillon pré-rempli avec le résumé digéré : point de départ
+                   éditorial raisonnable, laissé entièrement éditable avant envoi. #}
+                <form method="post" action="/liste/{{ source.id }}/republier">
+                    <div class="champs">
+                        <div class="champ">
+                            <label for="canal">Canal</label>
+                            <select id="canal" name="canal" required>
+                                <option value="">—</option>
+                                <option value="linkedin">linkedin</option>
+                                <option value="x">x</option>
+                            </select>
+                        </div>
+                        <div class="champ">
+                            <label for="posture">Posture</label>
+                            <select id="posture" name="posture" required>
+                                <option value="">—</option>
+                                <option value="personal_branding">personal_branding</option>
+                                <option value="entreprise">entreprise</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="champ">
+                        <label for="brouillon">Brouillon</label>
+                        <textarea
+                            id="brouillon" name="brouillon" rows="4" required
+                        >{{ source.article.resume or "" }}</textarea>
+                    </div>
+                    <button type="submit" class="bouton">Créer la republication</button>
+                </form>
             {% endif %}
         </section>
     </div>

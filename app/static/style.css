@@ -228,6 +228,14 @@ textarea:focus-visible {
     background: #f3f4f6;
 }
 
+/* ratio 6.87:1 — mêmes valeurs que .badge-captured : un brouillon de
+   Republication est un état neutre au même titre qu'une Source captée,
+   rien à signaler visuellement avant publication. */
+.badge-draft {
+    color: #4b5563;
+    background: #f3f4f6;
+}
+
 /* ratio 6.08:1 */
 .badge-qualified {
     color: #1d4ed8;

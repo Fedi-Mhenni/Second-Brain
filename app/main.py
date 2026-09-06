@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import init_db
-from app.routes import capture, sources
+from app.routes import capture, folders, sources
 
 
 @asynccontextmanager
@@ -19,7 +19,10 @@ app = FastAPI(title="Second Brain", lifespan=lifespan)
 # Branche les routes de capture (POST /capture/url).
 app.include_router(capture.router)
 
-# Branche les routes de rangement (PATCH /sources/{id}/folder).
+# Branche la route de listing des dossiers (GET /folders).
+app.include_router(folders.router)
+
+# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder).
 app.include_router(sources.router)
 
 

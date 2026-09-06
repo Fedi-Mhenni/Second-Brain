@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import init_db
-from app.routes import capture, folders
+from app.routes import capture, folders, sources
 
 
 @asynccontextmanager
@@ -21,6 +21,9 @@ app.include_router(capture.router)
 
 # Branche la route de listing des dossiers (GET /folders).
 app.include_router(folders.router)
+
+# Branche la route de listing des sources (GET /sources).
+app.include_router(sources.router)
 
 
 @app.get("/")

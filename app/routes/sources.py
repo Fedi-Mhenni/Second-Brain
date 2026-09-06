@@ -1,13 +1,20 @@
-"""Endpoint de listing : ``GET /sources``."""
+"""Endpoints « sources » : ``GET /sources`` (listing) et ``PATCH /sources/{id}/folder`` (Ranger)."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.services.ranger import FolderIntrouvable, SourceIntrouvable, ranger_source
 from app.services.sources import lister_sources
 
 router = APIRouter(prefix="/sources", tags=["sources"])
+
+
+class RangerSourceIn(BaseModel):
+    """Corps de la requête de rangement : le Folder auquel rattacher la Source."""
+
+    folder_id: int
 
 
 class SourceOut(BaseModel):
@@ -45,3 +52,36 @@ def lister_sources_route(
         )
         for s in sources
     ]
+
+
+@router.patch(
+    "/{source_id}/folder",
+    response_model=SourceOut,
+    status_code=status.HTTP_200_OK,
+)
+def ranger_source_route(
+    source_id: int, payload: RangerSourceIn, db: Session = Depends(get_db)
+):
+    """Range une Source existante dans un Folder existant.
+
+    Le statut passe à ``"ranged"`` seulement si la Source n'a pas déjà
+    dépassé cette étape du workflow (voir ``app.services.ranger``).
+    """
+    try:
+        source = ranger_source(db, source_id, payload.folder_id)
+    except SourceIntrouvable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
+        )
+    except FolderIntrouvable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Folder introuvable"
+        )
+
+    return SourceOut(
+        id=source.id,
+        url=source.url,
+        titre=source.titre,
+        statut=source.statut,
+        folder_id=source.folder_id,
+    )

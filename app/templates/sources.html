@@ -26,18 +26,22 @@
 
                         <p class="carte-source__meta">Capturée le {{ source.created_at.strftime("%d/%m/%Y") }}</p>
 
-                        {# Garde-fou pour les URL déjà en base (capturées avant la validation
-                           de schéma côté service, ou insérées par un autre chemin) : on ne
-                           rend le lien que si le schéma est http/https, même si le service
-                           empêche déjà les nouvelles URL invalides d'être enregistrées. #}
-                        {% if source.url and source.url.lower().startswith(("http://", "https://")) %}
-                            <a
-                                class="carte-source__lien"
-                                href="{{ source.url }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >{{ source.url }}</a>
-                        {% endif %}
+                        <div class="carte-source__actions">
+                            <a class="bouton" href="/liste/{{ source.id }}">Ouvrir la fiche</a>
+
+                            {# Garde-fou pour les URL déjà en base (capturées avant la validation
+                               de schéma côté service, ou insérées par un autre chemin) : on ne
+                               rend le lien que si le schéma est http/https, même si le service
+                               empêche déjà les nouvelles URL invalides d'être enregistrées. #}
+                            {% if source.url and source.url.lower().startswith(("http://", "https://")) %}
+                                <a
+                                    class="bouton bouton-secondaire"
+                                    href="{{ source.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >Source originale</a>
+                            {% endif %}
+                        </div>
                     </li>
                 {% endfor %}
             </ul>

@@ -276,6 +276,20 @@ textarea:focus-visible {
     cursor: pointer;
     /* Espace entre boutons/formulaires qui se suivent verticalement sur la fiche. */
     margin-top: var(--espace-xs);
+    text-decoration: none;
+}
+
+.bouton-secondaire {
+    color: var(--accent);
+    background: #ffffff;
+    border: 1px solid var(--bordure);
+}
+
+.carte-source__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-xs);
+    margin-top: var(--espace-sm);
 }
 
 /* ==========================================================================

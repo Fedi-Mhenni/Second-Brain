@@ -8,7 +8,7 @@ isolée dans le projet.
 
 from app.database import SessionLocal
 from app.models import Folder
-from scripts.seed import NOMS, seed
+from scripts.seed import DOSSIERS, NOMS, seed
 
 
 def test_seed_est_idempotent():
@@ -21,5 +21,30 @@ def test_seed_est_idempotent():
     try:
         for nom in NOMS:
             assert db.query(Folder).filter_by(nom=nom).count() == 1
+    finally:
+        db.close()
+
+
+def test_seed_renseigne_les_descriptions_manquantes():
+    db = SessionLocal()
+    try:
+        folder = db.query(Folder).filter_by(nom="Technique").first()
+        if folder is None:
+            db.add(Folder(nom="Technique", description=None))
+        else:
+            folder.description = None
+        db.commit()
+    finally:
+        db.close()
+
+    seed()
+
+    description_attendue = next(
+        dossier["description"] for dossier in DOSSIERS if dossier["nom"] == "Technique"
+    )
+    db = SessionLocal()
+    try:
+        folder = db.query(Folder).filter_by(nom="Technique").one()
+        assert folder.description == description_attendue
     finally:
         db.close()

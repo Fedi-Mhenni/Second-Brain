@@ -8,13 +8,52 @@ from app.database import SessionLocal, init_db
 from app.models import Folder
 
 # Les dossiers thématiques de départ, propres à cette instance.
-NOMS = [
-    "Technique",
-    "Design & UX/UI",
-    "Carrière & Mindset",
-    "Tendances Numériques & IA",
-    "Gestion de projet digital",
+DOSSIERS = [
+    {
+        "nom": "Technique",
+        "description": (
+            "Axe 1 - TECHNOLOGIQUE. Outils, langages et frameworks pour "
+            "developper des agents et automatiser."
+        ),
+    },
+    {
+        "nom": "Intelligence artificielle",
+        "description": (
+            "Axe 2 - TECHNOLOGIQUE. Modeles, agents autonomes, capacites "
+            "reelles et limites documentees."
+        ),
+    },
+    {
+        "nom": "Trading & finance",
+        "description": (
+            "Axe 3 - METIER. Marches, strategies, outils d'analyse et cadre "
+            "reglementaire."
+        ),
+    },
+    {
+        "nom": "UX / UI Design",
+        "description": (
+            "Axe 4 - FONCTIONNEL. Interfaces, ergonomie et attentes reelles "
+            "des utilisateurs."
+        ),
+    },
+    {
+        "nom": "Business & entrepreneuriat",
+        "description": (
+            "Axe 5 - METIER. Modeles economiques, marche de l'IA, "
+            "opportunites professionnelles."
+        ),
+    },
+    {
+        "nom": "Gestion de projet digital",
+        "description": (
+            "Axe 6 - METIER. Methodes, roles et outillage de la conduite de "
+            "projet numerique."
+        ),
+    },
 ]
+
+NOMS = [dossier["nom"] for dossier in DOSSIERS]
 
 
 def seed() -> None:
@@ -24,12 +63,17 @@ def seed() -> None:
     db = SessionLocal()
     try:
         crees, existants = [], []
-        for nom in NOMS:
+        for dossier in DOSSIERS:
+            nom = dossier["nom"]
+            description = dossier["description"]
             # ``.first()`` renvoie la ligne ou None : on ne crée que si absente.
-            if db.query(Folder).filter_by(nom=nom).first() is None:
-                db.add(Folder(nom=nom))
+            folder = db.query(Folder).filter_by(nom=nom).first()
+            if folder is None:
+                db.add(Folder(nom=nom, description=description))
                 crees.append(nom)
             else:
+                if not folder.description:
+                    folder.description = description
                 existants.append(nom)
         db.commit()
     finally:

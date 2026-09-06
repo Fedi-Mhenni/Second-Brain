@@ -27,7 +27,7 @@ c'est donc la page HTML qui porte un nom distinct.
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models import Source
@@ -60,7 +60,17 @@ def dashboard_route(request: Request, db: Session = Depends(get_db)):
 @router.get("/liste")
 def liste_sources_route(request: Request, db: Session = Depends(get_db)):
     # Idem : lister/trier pour affichage n'est pas de la logique métier.
-    sources = db.query(Source).order_by(Source.created_at.desc()).all()
+    # ``joinedload(Source.folder)`` : sources.html accède à source.folder.nom
+    # pour chaque source dans sa boucle. Sans eager-loading, chaque accès à
+    # ``source.folder`` déclencherait sa propre requête (lazy loading) ->
+    # une requête en plus par source rangée en base (N+1). Le joinedload
+    # récupère tout en une seule requête (LEFT JOIN sources/folders).
+    sources = (
+        db.query(Source)
+        .options(joinedload(Source.folder))
+        .order_by(Source.created_at.desc())
+        .all()
+    )
     return _templates(request).TemplateResponse(
         request, "sources.html", {"sources": sources}
     )

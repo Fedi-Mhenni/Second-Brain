@@ -100,12 +100,20 @@ textarea:focus-visible {
 /* ==========================================================================
    DESIGN SYSTEM — appliqué uniquement à /liste (app/templates/sources.html),
    le temps que le coéquipier valide la direction avant généralisation.
-   Tout est scopé sous .page-liste : aucune règle ci-dessous ne touche aux
-   classes ci-dessus (.entete, .contenu, .formulaire, etc.), donc aucune
-   autre page ne change visuellement.
+   Les classes de mise en page (.page-liste, .cartes-sources, .carte-source*)
+   sont scopées sous .page-liste : aucune ne touche aux classes existantes
+   ci-dessus (.entete, .contenu, .formulaire, etc.), donc les autres pages ne
+   changent pas visuellement.
+   Exception volontaire : .badge et .bouton restent des classes globales,
+   PAS scopées sous .page-liste. Elles seront généralisées à tout le reste
+   de l'application dans une prochaine étape ; les scoper ici pour devoir les
+   sortir de .page-liste ensuite serait du travail jeté.
+   La police Inter est chargée via <link> dans app/templates/layout.html
+   (preconnect + feuille de style Google Fonts), pas via @import ici :
+   @import bloque et sérialise la requête après le chargement de ce
+   fichier CSS, alors qu'un <link> dans le head est découvert et
+   parallélisé par le navigateur dès le HTML.
    ========================================================================== */
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
     /* Couleurs */
@@ -198,7 +206,9 @@ textarea:focus-visible {
    pleine. Le fond ne porte pas seul le sens (le mot du statut est toujours
    affiché en texte, voir sources.html) ; la couleur du texte ne sert qu'à
    renforcer la lecture rapide. Ratios de contraste texte/fond calculés
-   (WCAG AA, seuil 4.5:1) : voir le tableau fourni séparément. */
+   (WCAG AA, seuil 4.5:1) : voir le tableau fourni séparément.
+   Classe globale, volontairement PAS sous .page-liste : voir l'en-tête de
+   cette section. */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -241,7 +251,9 @@ textarea:focus-visible {
 }
 
 /* Bouton du design system : pas encore utilisé sur /liste (page en lecture
-   seule), posé ici pour que la classe existe dès la généralisation. */
+   seule), posé ici pour que la classe existe dès la généralisation.
+   Classe globale, volontairement PAS sous .page-liste (même raison que
+   .badge ci-dessus). */
 .bouton {
     display: inline-block;
     font-family: var(--police);

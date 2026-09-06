@@ -92,6 +92,7 @@ body {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
+select:focus-visible,
 textarea:focus-visible {
     outline: 2px solid var(--couleur-accent);
     outline-offset: 2px;
@@ -100,15 +101,13 @@ textarea:focus-visible {
 /* ==========================================================================
    DESIGN SYSTEM — variables et classes globales à toute l'application :
    rien ci-dessous n'est techniquement limité à une page (``.page-liste``
-   scope seulement deux surcharges ponctuelles, ``h1`` et ``.vide`` ; toutes
-   les autres classes, ``.carte-source*`` comme ``.badge``/``.bouton``, sont
-   de simples sélecteurs globaux).
-   Ce qui est volontairement restreint, c'est leur USAGE : seul
-   app/templates/sources.html référence ces classes aujourd'hui, le temps
-   que le coéquipier valide la direction visuelle sur une seule page avant
-   qu'on généralise leur usage au reste de l'application. Rien n'empêche un
-   autre template de les utiliser dès maintenant ; simplement, aucun ne le
-   fait encore, donc aucune autre page ne change visuellement pour l'instant.
+   et ``.page-fiche`` scopent chacune quelques surcharges ponctuelles, comme
+   ``h1`` ; les autres classes, ``.carte-source*``/``.section-fiche*`` comme
+   ``.badge``/``.bouton``, sont de simples sélecteurs globaux).
+   La généralisation validée sur /liste s'étend maintenant à la fiche détail
+   d'une source (app/templates/fiche_source.html) : ``.badge`` et ``.bouton``
+   y sont réutilisés tels quels, sans nouvelle valeur en dur — même palette,
+   même grille d'espacement à 4 valeurs.
    La police Inter est chargée via <link> dans app/templates/layout.html
    (preconnect + feuille de style Google Fonts), pas via @import ici :
    @import bloque et sérialise la requête après le chargement de ce
@@ -253,8 +252,8 @@ textarea:focus-visible {
     background: #effbf3;
 }
 
-/* Bouton du design system : pas encore utilisé sur /liste (page en lecture
-   seule), posé ici pour que la classe existe dès la généralisation. Classe
+/* Bouton du design system, réutilisé par les formulaires d'action de la
+   fiche détail (Qualifier/Ranger/Digérer, voir fiche_source.html). Classe
    globale, même raison que .badge ci-dessus. */
 .bouton {
     display: inline-block;
@@ -267,4 +266,141 @@ textarea:focus-visible {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    /* Espace entre boutons/formulaires qui se suivent verticalement sur la fiche. */
+    margin-top: var(--espace-xs);
+}
+
+/* ==========================================================================
+   FICHE DÉTAIL D'UNE SOURCE (app/templates/fiche_source.html) — même design
+   system que /liste, une nouvelle classe de scope (``.page-fiche``) pour les
+   mêmes raisons que ``.page-liste`` : surcharger localement quelques
+   éléments partagés (ici, ``h1``) sans toucher aux autres pages.
+   ========================================================================== */
+
+.page-fiche {
+    font-family: var(--police);
+    color: var(--texte);
+}
+
+.page-fiche h1 {
+    font-size: var(--taille-titre);
+    margin: 0;
+}
+
+.fiche__entete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espace-sm);
+    margin: var(--espace-sm) 0 var(--espace-lg) 0;
+}
+
+.fiche__lien {
+    display: inline-block;
+    margin-bottom: var(--espace-md);
+    font-size: var(--taille-secondaire);
+    color: var(--accent);
+    word-break: break-all;
+}
+
+/* Réutilise la couleur/police du titre de carte : un lien qui ne doit pas
+   ressembler à un lien classique (souligné/bleu), pour rester cohérent avec
+   .carte-source__titre qui n'était pas cliquable jusqu'ici. */
+.carte-source__titre-lien {
+    color: inherit;
+    text-decoration: none;
+}
+
+.carte-source__titre-lien:hover,
+.carte-source__titre-lien:focus-visible {
+    text-decoration: underline;
+}
+
+.section-fiche {
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding: var(--espace-md);
+    margin-bottom: var(--espace-md);
+}
+
+.section-fiche h2 {
+    font-size: var(--taille-texte);
+    font-weight: 600;
+    margin: 0 0 var(--espace-sm) 0;
+}
+
+.section-fiche__meta {
+    margin: 0 0 var(--espace-sm) 0;
+    font-size: var(--taille-secondaire);
+    color: var(--texte-secondaire);
+}
+
+.section-fiche__texte {
+    font-size: var(--taille-texte);
+    margin: 0 0 var(--espace-sm) 0;
+}
+
+.champs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-sm);
+    margin-bottom: var(--espace-xs);
+}
+
+.champ {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-xs);
+    margin-bottom: var(--espace-xs);
+}
+
+.champ label {
+    font-size: var(--taille-secondaire);
+    color: var(--texte-secondaire);
+    font-weight: 600;
+}
+
+.champ input,
+.champ select,
+.champ textarea {
+    font-family: var(--police);
+    font-size: var(--taille-texte);
+    color: var(--texte);
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-radius: 6px;
+    padding: var(--espace-xs) var(--espace-sm);
+}
+
+.champ textarea {
+    resize: vertical;
+}
+
+.liste-tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-sm);
+    margin: 0;
+    padding: 0;
+    font-size: var(--taille-texte);
+}
+
+.liste-republications {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-xs);
+}
+
+.liste-republications li {
+    border: 1px solid var(--bordure);
+    border-radius: 6px;
+    padding: var(--espace-sm);
+    font-size: var(--taille-texte);
 }

@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% block title %}{{ source.titre or "Source" }} — Second Brain{% endblock %}
+{% block content %}
+    <div class="page-fiche">
+        <p><a href="/liste">&larr; Retour à la liste</a></p>
+
+        <div class="fiche__entete">
+            <h1>{{ source.titre or source.url or "(sans titre)" }}</h1>
+            <span class="badge badge-{{ source.statut }}">{{ source.statut }}</span>
+        </div>
+
+        {% if erreur == "aucun_contenu" %}
+            <p class="erreur">Aucun contenu brut à digérer pour cette source.</p>
+        {% elif erreur == "resume_vide" %}
+            <p class="erreur">Le résumé ne peut pas être vide.</p>
+        {% endif %}
+
+        {% if source.url and source.url.lower().startswith(("http://", "https://")) %}
+            <p>
+                <a
+                    class="fiche__lien"
+                    href="{{ source.url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >{{ source.url }}</a>
+            </p>
+        {% endif %}
+
+        {# ---------- Qualifier ---------- #}
+        <section class="section-fiche">
+            <h2>Qualification</h2>
+
+            {% if source.qualification %}
+                <p class="section-fiche__meta">
+                    Origine : {{ "IA" if source.qualification.qualified_by == "ai" else "manuelle" }}
+                </p>
+            {% else %}
+                <p class="vide">Pas encore qualifiée.</p>
+            {% endif %}
+
+            <form method="post" action="/liste/{{ source.id }}/qualifier">
+                <div class="champs">
+                    <div class="champ">
+                        <label for="categorie">Catégorie</label>
+                        <select id="categorie" name="categorie" required>
+                            <option value="">—</option>
+                            {% for c in ["metier", "pro", "perso", "culture"] %}
+                                <option
+                                    value="{{ c }}"
+                                    {% if source.qualification and source.qualification.categorie == c %}selected{% endif %}
+                                >{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="champ">
+                        <label for="legitimite">Légitimité (1-5)</label>
+                        <input
+                            type="number" id="legitimite" name="legitimite"
+                            min="1" max="5" required
+                            value="{{ source.qualification.legitimite if source.qualification else '' }}"
+                        >
+                    </div>
+                    <div class="champ">
+                        <label for="interet">Intérêt (1-5)</label>
+                        <input
+                            type="number" id="interet" name="interet"
+                            min="1" max="5" required
+                            value="{{ source.qualification.interet if source.qualification else '' }}"
+                        >
+                    </div>
+                </div>
+                <button type="submit" class="bouton">Enregistrer la qualification</button>
+            </form>
+
+            <form method="post" action="/liste/{{ source.id }}/qualifier/auto">
+                <button type="submit" class="bouton">Qualifier avec l'IA</button>
+            </form>
+        </section>
+
+        {# ---------- Ranger ---------- #}
+        <section class="section-fiche">
+            <h2>Rangement</h2>
+
+            {% if source.folder %}
+                <p class="section-fiche__meta">Dossier actuel : {{ source.folder.nom }}</p>
+            {% else %}
+                <p class="vide">Pas encore rangée.</p>
+            {% endif %}
+
+            {% if folders %}
+                <form method="post" action="/liste/{{ source.id }}/ranger">
+                    <div class="champ">
+                        <label for="folder_id">Dossier</label>
+                        <select id="folder_id" name="folder_id" required>
+                            <option value="">—</option>
+                            {% for folder in folders %}
+                                <option
+                                    value="{{ folder.id }}"
+                                    {% if source.folder_id == folder.id %}selected{% endif %}
+                                >{{ folder.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="bouton">Ranger</button>
+                </form>
+            {% else %}
+                <p class="vide">Aucun dossier n'existe encore.</p>
+            {% endif %}
+        </section>
+
+        {# ---------- Digérer ---------- #}
+        <section class="section-fiche">
+            <h2>Digestion</h2>
+
+            {% if source.article %}
+                <p class="section-fiche__meta">Titre de l'article : {{ source.article.titre or "(sans titre)" }}</p>
+                {% if source.article.resume %}
+                    <p class="section-fiche__texte">{{ source.article.resume }}</p>
+                {% endif %}
+            {% else %}
+                <p class="vide">Pas encore digérée.</p>
+            {% endif %}
+
+            <form method="post" action="/liste/{{ source.id }}/digerer/auto">
+                <button type="submit" class="bouton">Digérer avec l'IA</button>
+            </form>
+
+            <form method="post" action="/liste/{{ source.id }}/digerer">
+                <div class="champ">
+                    <label for="resume">Résumé (édition manuelle)</label>
+                    <textarea id="resume" name="resume" rows="4">{{ source.article.resume if source.article else "" }}</textarea>
+                </div>
+                <button type="submit" class="bouton">Enregistrer le résumé</button>
+            </form>
+        </section>
+
+        {# ---------- Tags ---------- #}
+        <section class="section-fiche">
+            <h2>Tags</h2>
+
+            {% if source.article and source.article.article_tags %}
+                <ul class="liste-tags">
+                    {% for article_tag in source.article.article_tags %}
+                        <li>
+                            {{ article_tag.tag.nom }}
+                            <span class="section-fiche__meta">({{ "IA" if article_tag.added_by == "ai" else "manuel" }})</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="vide">Aucun tag pour l'instant.</p>
+            {% endif %}
+        </section>
+
+        {# ---------- Republications ---------- #}
+        <section class="section-fiche">
+            <h2>Republications</h2>
+
+            {% if source.article and source.article.republications %}
+                <ul class="liste-republications">
+                    {% for republication in source.article.republications %}
+                        <li>
+                            {{ republication.canal }} — {{ republication.posture }} — {{ republication.statut }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="vide">Aucune republication pour l'instant.</p>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

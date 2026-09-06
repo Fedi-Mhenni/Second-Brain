@@ -150,6 +150,25 @@
             {% else %}
                 <p class="vide">Aucun tag pour l'instant.</p>
             {% endif %}
+
+            {% if source.article %}
+                <form method="post" action="/liste/{{ source.id }}/tags">
+                    <div class="champs">
+                        <div class="champ">
+                            <label for="nom">Nom du tag</label>
+                            <input type="text" id="nom" name="nom" required>
+                        </div>
+                        <div class="champ">
+                            <label for="added_by">Origine</label>
+                            <select id="added_by" name="added_by">
+                                <option value="manual" selected>manual</option>
+                                <option value="ai">ai</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="bouton">Ajouter le tag</button>
+                </form>
+            {% endif %}
         </section>
 
         {# ---------- Republications ---------- #}

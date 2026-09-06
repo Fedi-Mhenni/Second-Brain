@@ -24,7 +24,9 @@ contrat JSON garde le chemin d'origine (déjà utilisé par Ranger et Digérer),
 c'est donc la page HTML qui porte un nom distinct.
 """
 
-from fastapi import APIRouter, Depends, Form, Request
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
@@ -36,6 +38,19 @@ from app.services.capture import (
     UrlDejaCaptee,
     capture_note,
     capture_url,
+)
+from app.services.digerer import (
+    AucunContenuFourni,
+    SourceIntrouvable as SourceIntrouvableDigest,
+    digerer_source,
+    digerer_source_auto,
+)
+from app.services.folders import lister_folders
+from app.services.qualifier import qualifier_source, qualifier_source_auto
+from app.services.ranger import (
+    FolderIntrouvable,
+    SourceIntrouvable as SourceIntrouvableRanger,
+    ranger_source,
 )
 
 router = APIRouter()
@@ -79,6 +94,123 @@ def liste_sources_route(request: Request, db: Session = Depends(get_db)):
     return _templates(request).TemplateResponse(
         request, "sources.html", {"sources": sources}
     )
+
+
+@router.get("/liste/{source_id}")
+def fiche_source_route(
+    source_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    erreur: str | None = None,
+):
+    """Vue détail d'une Source : tout ce que le workflow sait d'elle, et les
+    actions pour la faire avancer (Qualifier, Ranger, Digérer).
+
+    Lecture directe (pas de service) : un ``db.get`` par identifiant n'est
+    pas une décision métier, même raisonnement que ``dashboard_route`` et
+    ``liste_sources_route`` ci-dessus.
+    """
+    source = db.get(Source, source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    return _templates(request).TemplateResponse(
+        request,
+        "fiche_source.html",
+        {"source": source, "folders": lister_folders(db), "erreur": erreur},
+    )
+
+
+@router.post("/liste/{source_id}/qualifier")
+def fiche_qualifier_manuel_route(
+    source_id: int,
+    db: Session = Depends(get_db),
+    categorie: Literal["metier", "pro", "perso", "culture"] = Form(...),
+    legitimite: int = Form(..., ge=1, le=5),
+    interet: int = Form(..., ge=1, le=5),
+):
+    """Qualifie manuellement la Source, puis revient sur sa fiche.
+
+    Mêmes contraintes que ``QualifierSourceIn`` (API JSON) : validation
+    d'entrée par FastAPI/Pydantic, pas une règle métier écrite ici.
+    """
+    try:
+        qualifier_source(
+            db,
+            source_id,
+            categorie=categorie,
+            legitimite=legitimite,
+            interet=interet,
+            qualified_by="manual",
+        )
+    except SourceIntrouvableRanger:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/qualifier/auto")
+def fiche_qualifier_auto_route(source_id: int, db: Session = Depends(get_db)):
+    """Déclenche la qualification automatique (LLMProvider), revient sur la fiche."""
+    try:
+        qualifier_source_auto(db, source_id)
+    except SourceIntrouvableRanger:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/ranger")
+def fiche_ranger_route(
+    source_id: int, db: Session = Depends(get_db), folder_id: int = Form(...)
+):
+    """Range la Source dans le Folder choisi, revient sur sa fiche."""
+    try:
+        ranger_source(db, source_id, folder_id)
+    except SourceIntrouvableRanger:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+    except FolderIntrouvable:
+        raise HTTPException(status_code=404, detail="Folder introuvable")
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/digerer/auto")
+def fiche_digerer_auto_route(source_id: int, db: Session = Depends(get_db)):
+    """Déclenche la digestion automatique (LLMProvider), revient sur la fiche."""
+    try:
+        digerer_source_auto(db, source_id)
+    except SourceIntrouvableDigest:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+    except AucunContenuFourni:
+        # La Source n'a pas de contenu_brut exploitable : on revient sur la
+        # fiche avec un indicateur d'erreur plutôt que de laisser planter.
+        return RedirectResponse(
+            f"/liste/{source_id}?erreur=aucun_contenu", status_code=303
+        )
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/digerer")
+def fiche_digerer_manuel_route(
+    source_id: int, db: Session = Depends(get_db), resume: str = Form(default="")
+):
+    """Édite manuellement le résumé de l'Article, revient sur la fiche.
+
+    Seul ``resume`` est modifiable depuis la fiche (pas titre/contenu) : le
+    reste de l'Article vient de la digestion, manuelle ou automatique.
+    """
+    try:
+        digerer_source(db, source_id, resume=resume)
+    except SourceIntrouvableDigest:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+    except AucunContenuFourni:
+        return RedirectResponse(
+            f"/liste/{source_id}?erreur=resume_vide", status_code=303
+        )
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
 
 
 @router.get("/capture")

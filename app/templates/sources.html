@@ -14,7 +14,9 @@
                 {% for source in sources %}
                     <li class="carte-source">
                         <div class="carte-source__entete">
-                            <h2 class="carte-source__titre">{{ source.titre or source.url or "(sans titre)" }}</h2>
+                            <h2 class="carte-source__titre">
+                                <a class="carte-source__titre-lien" href="/liste/{{ source.id }}">{{ source.titre or source.url or "(sans titre)" }}</a>
+                            </h2>
                             <span class="badge badge-{{ source.statut }}">{{ source.statut }}</span>
                         </div>
 

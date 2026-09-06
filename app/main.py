@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routes import articles, capture, folders, sources, web
+from app.routes import articles, capture, folders, republications, sources, web
 
 
 @asynccontextmanager
@@ -49,6 +49,9 @@ app.include_router(sources.router)
 
 # Branche la route de republication (POST /articles/{id}/republications).
 app.include_router(articles.router)
+
+# Branche la route de publication d'une republication (PATCH /republications/{id}/publier).
+app.include_router(republications.router)
 
 
 @app.get("/health")

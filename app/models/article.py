@@ -44,5 +44,20 @@ class Article(Base):
     # Accès inverse : depuis un Article, ``article.source`` renvoie la Source liée.
     source = relationship("Source", back_populates="article")
 
+    # Tags de l'article, via l'association explicite ArticleTag (porte
+    # ``added_by``, voir ce modèle) -> pas de relation many-to-many directe
+    # vers Tag, sinon l'ORM ne donnerait plus accès à cette métadonnée.
+    # Le rangement par tags porte sur l'Article (contenu retravaillé), pas
+    # sur la Source brute : on tague ce qui a été digéré, pas la page brute.
+    article_tags = relationship("ArticleTag", back_populates="article")
+
+    # Une Republication ne peut exister qu'à partir d'un Article (donc
+    # seulement après digestion) : voir la docstring de Republication pour
+    # la raison de ce rattachement (contrainte d'ordre du workflow portée
+    # par le schéma). Un Article peut donner lieu à plusieurs Republications
+    # (canaux/postures différents) -> relation un-à-plusieurs, pas de
+    # ``uselist=False``.
+    republications = relationship("Republication", back_populates="article")
+
     def __repr__(self) -> str:
         return f"<Article id={self.id} source_id={self.source_id}>"

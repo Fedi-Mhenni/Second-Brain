@@ -1,0 +1,124 @@
+:root {
+    --couleur-texte: #1a1a1a;
+    --couleur-fond: #fafafa;
+    --couleur-bordure: #ddd;
+    --couleur-accent: #2b5797;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--couleur-texte);
+    background: var(--couleur-fond);
+    line-height: 1.5;
+}
+
+.entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: white;
+    border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.marque {
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--couleur-texte);
+}
+
+.entete nav a {
+    margin-left: 1.5rem;
+    text-decoration: none;
+    color: var(--couleur-accent);
+}
+
+.contenu {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.vide {
+    color: #666;
+    font-style: italic;
+}
+
+.erreur {
+    padding: 0.75rem 1rem;
+    background: #fdecea;
+    border: 1px solid #f5c2c0;
+    border-radius: 4px;
+    color: #7a1f1a;
+}
+
+.formulaire {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 6px;
+}
+
+.formulaire input,
+.formulaire textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 4px;
+    font: inherit;
+}
+
+.formulaire button {
+    padding: 0.5rem 1rem;
+    background: var(--couleur-accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.liste-sources {
+    list-style: none;
+    padding: 0;
+}
+
+.liste-sources li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+    background: #999;
+}
+
+.badge-captured { background: #6b7280; }
+.badge-qualified { background: #2563eb; }
+.badge-ranged { background: #7c3aed; }
+.badge-digested { background: #d97706; }
+.badge-published { background: #16a34a; }
+
+.liste-sources .lien {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--couleur-accent);
+}

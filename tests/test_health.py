@@ -1,4 +1,4 @@
-"""Test de santé : l'application répond sur la route racine.
+"""Test de santé : l'application répond sur /health.
 
 Lancement : ``python -m pytest`` depuis la racine du projet (le ``-m`` place la
 racine sur le ``sys.path``, ce qui permet le ``from app.main import app``).
@@ -15,7 +15,9 @@ client = TestClient(app)
 
 
 def test_health_ok():
-    response = client.get("/")
+    # ``/`` sert désormais le dashboard HTML (voir app/routes/web.py) ; le
+    # health-check JSON est passé sur /health.
+    response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"message": "Second Brain is running"}

@@ -8,18 +8,13 @@ Ce module centralise tout ce qui touche à la base de données :
 - ``init_db()``    : crée les tables au démarrage si elles n'existent pas encore.
 """
 
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Charge les variables du fichier .env dans l'environnement du processus.
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/second_brain.db")
+from app.config import DATABASE_URL
 
 Path("data").mkdir(exist_ok=True)
 

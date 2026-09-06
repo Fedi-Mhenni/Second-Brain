@@ -44,7 +44,8 @@ app.include_router(web.router)
 # Branche la route de listing des dossiers (GET /folders).
 app.include_router(folders.router)
 
-# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder, POST /sources/{id}/digest).
+# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder,
+# POST /sources/{id}/digest[/auto], POST /sources/{id}/qualification).
 app.include_router(sources.router)
 
 # Branche la route de republication (POST /articles/{id}/republications).

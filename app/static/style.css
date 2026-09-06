@@ -84,41 +84,187 @@ body {
     cursor: pointer;
 }
 
-.liste-sources {
+/* ==========================================================================
+   Accessibilité — s'applique à toute la page, pas seulement /liste :
+   un focus clavier doit toujours rester visible. Jamais de outline:none
+   sans remplacement (voir CLAUDE.md, section Accessibilité).
+   ========================================================================== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--couleur-accent);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   DESIGN SYSTEM — variables et classes globales à toute l'application :
+   rien ci-dessous n'est techniquement limité à une page (``.page-liste``
+   scope seulement deux surcharges ponctuelles, ``h1`` et ``.vide`` ; toutes
+   les autres classes, ``.carte-source*`` comme ``.badge``/``.bouton``, sont
+   de simples sélecteurs globaux).
+   Ce qui est volontairement restreint, c'est leur USAGE : seul
+   app/templates/sources.html référence ces classes aujourd'hui, le temps
+   que le coéquipier valide la direction visuelle sur une seule page avant
+   qu'on généralise leur usage au reste de l'application. Rien n'empêche un
+   autre template de les utiliser dès maintenant ; simplement, aucun ne le
+   fait encore, donc aucune autre page ne change visuellement pour l'instant.
+   La police Inter est chargée via <link> dans app/templates/layout.html
+   (preconnect + feuille de style Google Fonts), pas via @import ici :
+   @import bloque et sérialise la requête après le chargement de ce
+   fichier CSS, alors qu'un <link> dans le head est découvert et
+   parallélisé par le navigateur dès le HTML.
+   ========================================================================== */
+
+:root {
+    /* Couleurs */
+    --fond: #fafafa;
+    --carte: #ffffff;
+    --bordure: #e5e5e5;
+    --texte: #1a1a1a;
+    --texte-secondaire: #6b7280;
+    --accent: #5b5bd6;
+
+    /* Typographie */
+    --police: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --taille-titre: 24px;
+    --taille-texte: 15px;
+    --taille-secondaire: 13px;
+
+    /* Espacement — toute valeur utilisée dans .page-liste est l'une de ces 4 */
+    --espace-xs: 8px;
+    --espace-sm: 16px;
+    --espace-md: 24px;
+    --espace-lg: 32px;
+}
+
+.page-liste {
+    font-family: var(--police);
+    color: var(--texte);
+}
+
+.page-liste h1 {
+    font-size: var(--taille-titre);
+    margin: 0 0 var(--espace-md) 0;
+}
+
+.page-liste .vide {
+    font-family: var(--police);
+    font-size: var(--taille-texte);
+}
+
+.cartes-sources {
     list-style: none;
+    margin: 0;
     padding: 0;
-}
-
-.liste-sources li {
     display: flex;
+    flex-direction: column;
+    gap: var(--espace-sm);
+}
+
+.carte-source {
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-radius: 8px;
+    /* Ombre discrète, pas de dégradé (voir consignes design system). */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding: var(--espace-md);
+}
+
+.carte-source__entete {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: white;
-    border: 1px solid var(--couleur-bordure);
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
+    justify-content: space-between;
+    gap: var(--espace-sm);
 }
 
-.badge {
-    display: inline-block;
-    padding: 0.15rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
+.carte-source__titre {
+    font-size: var(--taille-titre);
     font-weight: 600;
-    text-transform: uppercase;
-    color: white;
-    background: #999;
+    margin: 0;
+    /* min-width:0 + overflow-wrap : un titre long se coupe au lieu de forcer
+       la carte à déborder quand la fenêtre se réduit. ``overflow-wrap``
+       (standard) plutôt que ``word-break: break-word`` (valeur non standard,
+       héritée d'un ancien comportement de word-break jamais spécifié). */
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
-.badge-captured { background: #6b7280; }
-.badge-qualified { background: #2563eb; }
-.badge-ranged { background: #7c3aed; }
-.badge-digested { background: #d97706; }
-.badge-published { background: #16a34a; }
+.carte-source__meta {
+    margin: var(--espace-xs) 0 0 0;
+    font-size: var(--taille-secondaire);
+    color: var(--texte-secondaire);
+}
 
-.liste-sources .lien {
-    margin-left: auto;
-    font-size: 0.85rem;
-    color: var(--couleur-accent);
+.carte-source__lien {
+    display: inline-block;
+    margin-top: var(--espace-xs);
+    font-size: var(--taille-secondaire);
+    color: var(--accent);
+    word-break: break-all;
+}
+
+/* Badges de statut — approche Linear : fond clair teinté + texte en couleur
+   pleine. Le fond ne porte pas seul le sens (le mot du statut est toujours
+   affiché en texte, voir sources.html) ; la couleur du texte ne sert qu'à
+   renforcer la lecture rapide. Ratios de contraste texte/fond calculés
+   (WCAG AA, seuil 4.5:1) : voir le tableau fourni séparément.
+   Classe globale (voir l'en-tête de cette section) : appelée à être
+   réutilisée telle quelle une fois le design system généralisé. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--police);
+    font-size: var(--taille-secondaire);
+    font-weight: 600;
+    padding: 2px var(--espace-xs);
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* ratio 6.87:1 */
+.badge-captured {
+    color: #4b5563;
+    background: #f3f4f6;
+}
+
+/* ratio 6.08:1 */
+.badge-qualified {
+    color: #1d4ed8;
+    background: #eff4ff;
+}
+
+/* ratio 6.36:1 */
+.badge-ranged {
+    color: #6d28d9;
+    background: #f5f0ff;
+}
+
+/* ratio 4.75:1 */
+.badge-digested {
+    color: #c2410c;
+    background: #fff3eb;
+}
+
+/* ratio 4.72:1 */
+.badge-published {
+    color: #15803d;
+    background: #effbf3;
+}
+
+/* Bouton du design system : pas encore utilisé sur /liste (page en lecture
+   seule), posé ici pour que la classe existe dès la généralisation. Classe
+   globale, même raison que .badge ci-dessus. */
+.bouton {
+    display: inline-block;
+    font-family: var(--police);
+    font-size: var(--taille-texte);
+    font-weight: 600;
+    padding: var(--espace-xs) var(--espace-sm);
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }

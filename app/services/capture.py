@@ -9,6 +9,7 @@ l'entrée et appeler la fonction correspondante.
 """
 
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
@@ -16,6 +17,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Source
+
+# Seuls ces schémas sont acceptés pour une Source. ``Source.url`` est rendue
+# telle quelle dans un ``href`` (voir app/templates/sources.html) : un schéma
+# comme ``javascript:`` exécuterait du script au clic si on le laissait passer.
+_SCHEMAS_AUTORISES = frozenset({"http", "https"})
 
 # En-tête envoyé à chaque requête : certains sites renvoient une erreur ou une
 # page vide si le client ne se présente pas comme un navigateur.
@@ -117,6 +123,26 @@ class UrlDejaCaptee(Exception):
         super().__init__(f"URL déjà captée (source id={source_id})")
 
 
+class SchemaUrlNonAutorise(Exception):
+    """Levée quand l'URL n'utilise pas le schéma http ou https.
+
+    Vérifiée ici plutôt que dans le seul schéma Pydantic ``HttpUrl`` de la
+    route JSON (app/routes/capture.py) : le formulaire HTML
+    (app/routes/web.py) passe une chaîne brute issue d'un ``Form(...)``, sans
+    cette validation Pydantic — seule une vérification à cet endroit, dans le
+    service, protège les deux chemins d'entrée (JSON et formulaire) de la
+    même façon.
+    """
+
+    def __init__(self, url: str):
+        self.url = url
+        super().__init__(f"Schéma d'URL non autorisé (http/https uniquement) : {url!r}")
+
+
+def _schema_autorise(url: str) -> bool:
+    return urlsplit(url).scheme.lower() in _SCHEMAS_AUTORISES
+
+
 def capture_url(db: Session, url: str) -> tuple[Source, FetchResult]:
     """Capte ``url`` : récupère la page au mieux et enregistre une ``Source``.
 
@@ -125,8 +151,12 @@ def capture_url(db: Session, url: str) -> tuple[Source, FetchResult]:
     être remplis plus tard. Retourne la Source créée et le ``FetchResult`` (pour
     que la route indique au client si le contenu a bien été récupéré).
 
-    Lève ``UrlDejaCaptee`` si l'URL existe déjà (contrainte d'unicité).
+    Lève ``SchemaUrlNonAutorise`` si le schéma n'est pas http/https,
+    ``UrlDejaCaptee`` si l'URL existe déjà (contrainte d'unicité).
     """
+    if not _schema_autorise(url):
+        raise SchemaUrlNonAutorise(url)
+
     result = fetch_page(url)
 
     source = Source(

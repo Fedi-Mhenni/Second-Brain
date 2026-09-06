@@ -1,24 +1,44 @@
 {% extends "layout.html" %}
 {% block title %}Sources — Second Brain{% endblock %}
 {% block content %}
-    <h1>Sources</h1>
+    <div class="page-liste">
+        <h1>Sources</h1>
 
-    {% if not sources %}
-        <p class="vide">
-            Aucune source capturée pour l'instant.
-            <a href="/capture">Capturer une première source</a>.
-        </p>
-    {% else %}
-        <ul class="liste-sources">
-            {% for source in sources %}
-                <li>
-                    <span class="badge badge-{{ source.statut }}">{{ source.statut }}</span>
-                    <span class="titre">{{ source.titre or source.url or "(sans titre)" }}</span>
-                    {% if source.url %}
-                        <a class="lien" href="{{ source.url }}" target="_blank" rel="noopener">{{ source.url }}</a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+        {% if not sources %}
+            <p class="vide">
+                Aucune source capturée pour l'instant.
+                <a href="/capture">Capturer une première source</a>.
+            </p>
+        {% else %}
+            <ul class="cartes-sources">
+                {% for source in sources %}
+                    <li class="carte-source">
+                        <div class="carte-source__entete">
+                            <h2 class="carte-source__titre">{{ source.titre or source.url or "(sans titre)" }}</h2>
+                            <span class="badge badge-{{ source.statut }}">{{ source.statut }}</span>
+                        </div>
+
+                        {% if source.folder %}
+                            <p class="carte-source__meta">Dossier : {{ source.folder.nom }}</p>
+                        {% endif %}
+
+                        <p class="carte-source__meta">Capturée le {{ source.created_at.strftime("%d/%m/%Y") }}</p>
+
+                        {# Garde-fou pour les URL déjà en base (capturées avant la validation
+                           de schéma côté service, ou insérées par un autre chemin) : on ne
+                           rend le lien que si le schéma est http/https, même si le service
+                           empêche déjà les nouvelles URL invalides d'être enregistrées. #}
+                        {% if source.url and source.url.lower().startswith(("http://", "https://")) %}
+                            <a
+                                class="carte-source__lien"
+                                href="{{ source.url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >{{ source.url }}</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
 {% endblock %}

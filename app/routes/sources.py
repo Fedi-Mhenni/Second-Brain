@@ -1,16 +1,20 @@
 """Endpoints « sources » regroupés sous ``prefix="/sources"`` :
 
-- ``GET  /sources``               — listing, filtres ``?statut=`` / ``?folder_id=``
-- ``PATCH /sources/{id}/folder``  — Ranger : rattache la Source à un Folder
-- ``POST  /sources/{id}/digest``  — Digérer : crée/met à jour l'Article lié
+- ``GET  /sources``                  — listing, filtres ``?statut=`` / ``?folder_id=``
+- ``PATCH /sources/{id}/folder``     — Ranger : rattache la Source à un Folder
+- ``POST  /sources/{id}/digest``     — Digérer : crée/met à jour l'Article lié
+- ``POST  /sources/{id}/qualification`` — Qualifier : crée/met à jour la Qualification
 
 ``SourceIntrouvable`` existe dans deux services (``ranger`` et ``digerer``) et
 n'a pas été fusionné (hors périmètre) : on importe les deux, avec alias, et
-chaque route attrape celle de son propre service.
+chaque route attrape celle de son propre service. ``qualifier`` réutilise
+celle de ``ranger`` plutôt que d'en redéfinir une 3e (voir ce module).
 """
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,6 +23,7 @@ from app.services.digerer import (
     SourceIntrouvable as SourceIntrouvableDigest,
     digerer_source,
 )
+from app.services.qualifier import qualifier_source
 from app.services.ranger import (
     FolderIntrouvable,
     SourceIntrouvable as SourceIntrouvableRanger,
@@ -65,6 +70,34 @@ class ArticleOut(BaseModel):
     titre: str | None
     contenu: str | None
     resume: str | None
+
+
+class QualifierSourceIn(BaseModel):
+    """Corps de la requête de qualification.
+
+    ``Literal`` sur ``categorie``/``qualified_by`` : FastAPI renvoie 422 tout
+    seul pour une valeur hors liste, pas de validation manuelle à écrire.
+    ``Field(ge=1, le=5)`` sur ``legitimite``/``interet`` : mêmes bornes que le
+    ``CheckConstraint`` du modèle ``Qualification`` (app/models/qualification.py)
+    — une valeur hors échelle est rejetée par le schéma avant même d'atteindre
+    la base, qui la refuserait de toute façon.
+    """
+
+    categorie: Literal["metier", "pro", "perso", "culture"]
+    legitimite: int = Field(ge=1, le=5)
+    interet: int = Field(ge=1, le=5)
+    qualified_by: Literal["ai", "manual"] = "manual"
+
+
+class QualificationOut(BaseModel):
+    """Une Qualification telle que renvoyée par l'API."""
+
+    id: int
+    source_id: int
+    categorie: str
+    legitimite: int
+    interet: int
+    qualified_by: str
 
 
 @router.get("", response_model=list[SourceOut])
@@ -164,4 +197,40 @@ def digerer_source_route(
         titre=article.titre,
         contenu=article.contenu,
         resume=article.resume,
+    )
+
+
+@router.post(
+    "/{source_id}/qualification",
+    response_model=QualificationOut,
+    status_code=status.HTTP_200_OK,
+)
+def qualifier_source_route(
+    source_id: int, payload: QualifierSourceIn, db: Session = Depends(get_db)
+):
+    """Crée ou met à jour la Qualification d'une Source existante.
+
+    404 si la Source n'existe pas (voir ``app.services.qualifier``).
+    """
+    try:
+        qualification = qualifier_source(
+            db,
+            source_id,
+            categorie=payload.categorie,
+            legitimite=payload.legitimite,
+            interet=payload.interet,
+            qualified_by=payload.qualified_by,
+        )
+    except SourceIntrouvableRanger:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
+        )
+
+    return QualificationOut(
+        id=qualification.id,
+        source_id=qualification.source_id,
+        categorie=qualification.categorie,
+        legitimite=qualification.legitimite,
+        interet=qualification.interet,
+        qualified_by=qualification.qualified_by,
     )

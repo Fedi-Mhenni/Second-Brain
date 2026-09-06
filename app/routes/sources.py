@@ -1,14 +1,8 @@
-"""Endpoints « sources » (API JSON) regroupés sous ``prefix="/api/sources"`` :
+"""Endpoints « sources » regroupés sous ``prefix="/sources"`` :
 
-- ``GET  /api/sources``               — listing, filtres ``?statut=`` / ``?folder_id=``
-- ``PATCH /api/sources/{id}/folder``  — Ranger : rattache la Source à un Folder
-- ``POST  /api/sources/{id}/digest``  — Digérer : crée/met à jour l'Article lié
-
-Prefixe ``/api`` : sans ça, ``GET /api/sources`` entrerait en collision avec
-``GET /sources``, la page HTML de ``app/routes/web.py`` (liste des sources).
-Les deux servaient le même chemin avant cette séparation ; l'API JSON est
-déplacée sous /api plutôt que l'inverse, l'application étant server-rendered
-(les pages HTML sont l'usage principal, gardent les chemins "nus").
+- ``GET  /sources``               — listing, filtres ``?statut=`` / ``?folder_id=``
+- ``PATCH /sources/{id}/folder``  — Ranger : rattache la Source à un Folder
+- ``POST  /sources/{id}/digest``  — Digérer : crée/met à jour l'Article lié
 
 ``SourceIntrouvable`` existe dans deux services (``ranger`` et ``digerer``) et
 n'a pas été fusionné (hors périmètre) : on importe les deux, avec alias, et
@@ -32,7 +26,7 @@ from app.services.ranger import (
 )
 from app.services.sources import lister_sources
 
-router = APIRouter(prefix="/api/sources", tags=["sources"])
+router = APIRouter(prefix="/sources", tags=["sources"])
 
 
 class RangerSourceIn(BaseModel):

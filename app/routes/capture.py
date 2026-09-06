@@ -1,4 +1,4 @@
-"""Endpoints de l'étape « Capter » : ``POST /api/capture/url`` et ``POST /api/capture/note``."""
+"""Endpoints de l'étape « Capter » : ``POST /capture/url`` et ``POST /capture/note``."""
 
 from typing import Annotated
 
@@ -9,11 +9,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.capture import UrlDejaCaptee, capture_note, capture_url
 
-# ``prefix`` : toutes les routes de ce fichier commencent par /api/capture.
-# Le prefixe /api distingue cette API JSON des pages HTML de app/routes/web.py
-# (ex. GET /sources sert une page, GET /api/sources renvoie du JSON).
+# ``prefix`` : toutes les routes de ce fichier commencent par /capture.
 # ``tags`` : regroupe ces routes sous « capture » dans la doc /docs.
-router = APIRouter(prefix="/api/capture", tags=["capture"])
+router = APIRouter(prefix="/capture", tags=["capture"])
 
 
 class CaptureUrlIn(BaseModel):

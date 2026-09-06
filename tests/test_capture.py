@@ -1,4 +1,4 @@
-"""Tests de POST /api/capture/url : succès, doublon, échecs réseau, entrée invalide.
+"""Tests de POST /capture/url : succès, doublon, échecs réseau, entrée invalide.
 
 Chaque test qui simule un fetch remplace ``httpx.get`` (voir
 ``_mock_httpx_get``) au lieu d'appeler le vrai réseau : les tests restent
@@ -43,7 +43,7 @@ def test_capture_url_ok(client, test_db, monkeypatch):
     )
     _mock_httpx_get(monkeypatch, response=_reponse_html(200, url, html))
 
-    r = client.post("/api/capture/url", json={"url": url})
+    r = client.post("/capture/url", json={"url": url})
 
     assert r.status_code == 201
     corps = r.json()
@@ -63,10 +63,10 @@ def test_capture_url_deja_captee(client, monkeypatch):
     url = "https://exemple.test/doublon"
     _mock_httpx_get(monkeypatch, response=_reponse_html(200, url, "<title>T</title>"))
 
-    premier = client.post("/api/capture/url", json={"url": url})
+    premier = client.post("/capture/url", json={"url": url})
     assert premier.status_code == 201
 
-    deuxieme = client.post("/api/capture/url", json={"url": url})
+    deuxieme = client.post("/capture/url", json={"url": url})
 
     assert deuxieme.status_code == 409
     assert deuxieme.json()["detail"]["id"] == premier.json()["id"]
@@ -77,7 +77,7 @@ def test_capture_url_injoignable(client, monkeypatch):
     url = "https://injoignable.test/"
     _mock_httpx_get(monkeypatch, exception=httpx.ConnectError("connexion refusée"))
 
-    r = client.post("/api/capture/url", json={"url": url})
+    r = client.post("/capture/url", json={"url": url})
 
     assert r.status_code == 201
     corps = r.json()
@@ -91,7 +91,7 @@ def test_capture_url_404(client, monkeypatch):
     url = "https://exemple.test/page-absente"
     _mock_httpx_get(monkeypatch, response=_reponse_html(404, url, "Not Found"))
 
-    r = client.post("/api/capture/url", json={"url": url})
+    r = client.post("/capture/url", json={"url": url})
 
     assert r.status_code == 201
     corps = r.json()
@@ -101,6 +101,6 @@ def test_capture_url_404(client, monkeypatch):
 
 def test_capture_url_invalide(client):
     """URL malformée : rejetée par la validation Pydantic, le service n'est jamais appelé."""
-    r = client.post("/api/capture/url", json={"url": "pas-une-url"})
+    r = client.post("/capture/url", json={"url": "pas-une-url"})
 
     assert r.status_code == 422

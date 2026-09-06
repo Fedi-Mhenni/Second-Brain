@@ -15,12 +15,13 @@ capture n'existe qu'à un seul endroit, seule la façon de la présenter change.
 
 Ces routes elles-mêmes ne portent aucune logique métier (règle de
 CLAUDE.md) : chaque route appelle le service puis rend un template ou
-redirige, rien de plus. ``POST /capture`` (ici) et ``POST /api/capture/url`` /
-``POST /api/capture/note`` (API JSON) sont des chemins distincts par
+redirige, rien de plus. ``POST /capture`` (ici) et ``POST /capture/url`` /
+``POST /capture/note`` (API JSON) sont des chemins distincts par
 construction : aucun risque de collision de route entre les deux fichiers.
-Même logique pour ``GET /sources`` (ici, page HTML) face à
-``GET /api/sources`` (JSON, ``app/routes/sources.py``) : les deux servaient
-le même chemin avant l'introduction du prefixe ``/api`` sur les routers JSON.
+Idem pour ``GET /liste`` (ici, page HTML de listing) face à ``GET /sources``
+(API JSON, ``app/routes/sources.py``) : le coéquipier a tranché que le
+contrat JSON garde le chemin d'origine (déjà utilisé par Ranger et Digérer),
+c'est donc la page HTML qui porte un nom distinct.
 """
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -56,7 +57,7 @@ def dashboard_route(request: Request, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/sources")
+@router.get("/liste")
 def liste_sources_route(request: Request, db: Session = Depends(get_db)):
     # Idem : lister/trier pour affichage n'est pas de la logique métier.
     sources = db.query(Source).order_by(Source.created_at.desc()).all()
@@ -94,4 +95,4 @@ def soumettre_capture_route(
     elif texte.strip():
         capture_note(db, texte.strip())
 
-    return RedirectResponse("/sources", status_code=303)
+    return RedirectResponse("/liste", status_code=303)

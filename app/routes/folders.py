@@ -1,4 +1,4 @@
-"""Endpoint de listing : ``GET /api/folders``."""
+"""Endpoint de listing : ``GET /folders``."""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.folders import lister_folders
 
-# Prefixe /api : distingue cette API JSON des pages HTML de app/routes/web.py.
-router = APIRouter(prefix="/api/folders", tags=["folders"])
+router = APIRouter(prefix="/folders", tags=["folders"])
 
 
 class FolderOut(BaseModel):

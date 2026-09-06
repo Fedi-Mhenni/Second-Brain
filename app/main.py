@@ -36,17 +36,16 @@ app.state.templates = Jinja2Templates(directory="app/templates")
 # dossier app/static/ (ici, la feuille de style unique demandée).
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# API JSON, sous /api : capture (POST /api/capture/url, POST /api/capture/note),
-# dossiers (GET /api/folders), sources (GET /api/sources, PATCH .../folder, POST .../digest).
-# Toutes les routes JSON vivent sous ce prefixe pour ne jamais entrer en
-# collision avec les pages HTML de web.py, qui occupent les chemins "nus"
-# (ex. GET /sources sert la page HTML, GET /api/sources la liste JSON).
+# Branche les routes de capture (POST /capture/url, POST /capture/note — API JSON)
+# et les routes web (dashboard, formulaire, liste des sources — HTML).
 app.include_router(capture.router)
-app.include_router(folders.router)
-app.include_router(sources.router)
-
-# Routes web HTML (dashboard, formulaire, liste des sources).
 app.include_router(web.router)
+
+# Branche la route de listing des dossiers (GET /folders).
+app.include_router(folders.router)
+
+# Branche les routes des sources (GET /sources, PATCH /sources/{id}/folder, POST /sources/{id}/digest).
+app.include_router(sources.router)
 
 
 @app.get("/health")

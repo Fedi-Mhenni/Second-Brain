@@ -1,15 +1,34 @@
 {% extends "layout.html" %}
 {% block title %}Dashboard — Second Brain{% endblock %}
 {% block content %}
-    <h1>Dashboard</h1>
+    <section class="hero-produit surface-3d" data-guide="dashboard">
+        <div>
+            <p class="eyebrow">Veille augmentee</p>
+            <h1>Dashboard</h1>
+            <p class="hero-produit__texte">
+                Centralisez vos sources, transformez-les en syntheses actionnables,
+                puis preparez vos republications sans perdre le fil.
+            </p>
+        </div>
+        <div class="orbite-3d" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </section>
 
     {% if total == 0 %}
-        <p class="vide">
-            Aucune source capturée pour l'instant.
-            <a href="/capture">Capturer une première source</a>.
-        </p>
+        <section class="etat-vide reveal">
+            <p class="eyebrow">Premier pas</p>
+            <h2>Aucune source capturée pour l'instant.</h2>
+            <p>Ajoutez une URL ou une note pour commencer votre base de veille.</p>
+            <a class="bouton" href="/capture">Capturer une première source</a>
+        </section>
     {% else %}
-        <p>{{ total }} source{{ "s" if total > 1 else "" }} capturée{{ "s" if total > 1 else "" }} au total.</p>
-        <p><a href="/liste">Voir toutes les sources</a></p>
+        <section class="stat-dashboard reveal">
+            <span class="stat-dashboard__nombre">{{ total }}</span>
+            <p>source{{ "s" if total > 1 else "" }} capturée{{ "s" if total > 1 else "" }} au total.</p>
+            <a class="bouton" href="/liste">Voir toutes les sources</a>
+        </section>
     {% endif %}
 {% endblock %}

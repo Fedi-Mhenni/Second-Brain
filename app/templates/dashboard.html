@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard — Second Brain{% endblock %}
+{% block content %}
+    <h1>Dashboard</h1>
+
+    {% if total == 0 %}
+        <p class="vide">
+            Aucune source capturée pour l'instant.
+            <a href="/capture">Capturer une première source</a>.
+        </p>
+    {% else %}
+        <p>{{ total }} source{{ "s" if total > 1 else "" }} capturée{{ "s" if total > 1 else "" }} au total.</p>
+        <p><a href="/liste">Voir toutes les sources</a></p>
+    {% endif %}
+{% endblock %}

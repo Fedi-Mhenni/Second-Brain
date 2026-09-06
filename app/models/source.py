@@ -38,7 +38,6 @@ class Source(Base):
     statut = Column(String(20), nullable=False, default="captured")
 
     # Dossier de rangement (étape 3) : nul tant que la source n'est pas rangée.
-    # ``ForeignKey("folders.id")`` : contrainte de clé étrangère vers la table ``folders``.
     folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True)
 
     # Suivi temporel. ``default`` est appelé à la création, ``onupdate`` à chaque
@@ -59,6 +58,13 @@ class Source(Base):
 
     # Le dossier où la Source est rangée (None tant qu'elle ne l'est pas).
     folder = relationship("Folder", back_populates="sources")
+
+    # Relation un-à-un vers la Qualification de cette Source (étape Qualifier).
+    # ``uselist=False`` car Qualification.source_id est unique (voir ce modèle) :
+    # même raison que pour ``article`` ci-dessus.
+    qualification = relationship(
+        "Qualification", back_populates="source", uselist=False
+    )
 
     def __repr__(self) -> str:
         # Affichage lisible dans les logs et le shell Python. ``!r`` = repr de la valeur.

@@ -10,7 +10,7 @@ Deux points d'entrée :
 from sqlalchemy.orm import Session
 
 from app.models import Article, Source
-from app.models.source import STATUTS
+from app.models.source import avancer_statut
 from app.services.llm_provider import get_llm_provider
 
 
@@ -89,8 +89,9 @@ def digerer_source(
     if resume is not None:
         article.resume = resume
 
-    if STATUTS.index(source.statut) < STATUTS.index("digested"):
-        source.statut = "digested"
+    # Règle d'avancement commune aux trois services (Ranger/Qualifier/Digérer) :
+    # voir avancer_statut (app/models/source.py).
+    avancer_statut(source, "digested")
 
     db.commit()
     db.refresh(article)

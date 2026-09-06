@@ -63,6 +63,17 @@ class LLMProvider(ABC):
         """
         ...
 
+    @abstractmethod
+    def generer(self, prompt: str) -> str:
+        """Retourne la réponse brute du modèle pour ``prompt``, envoyé tel quel.
+
+        Contrairement à ``resumer``, qui construit lui-même son prompt de
+        résumé, cette méthode sert les usages où l'appelant a besoin de
+        contrôler le prompt exact (ex. demander une réponse JSON stricte
+        pour la qualification, voir ``app.services.qualifier``).
+        """
+        ...
+
 
 class MockProvider(LLMProvider):
     """Fournisseur de test : résumé bidon mais déterministe, aucun appel réseau.
@@ -77,6 +88,14 @@ class MockProvider(LLMProvider):
         # ``contenu[:100]`` sur une chaîne courte ou vide renvoie ce qu'il y a
         # (voire ""), donc la sortie n'est jamais vide grâce au suffixe.
         return contenu[:_MOCK_EXTRAIT] + _MOCK_SUFFIXE
+
+    def generer(self, prompt: str) -> str:
+        # Même logique que ``resumer`` : déterministe, aucun réseau. Ce n'est
+        # volontairement pas du JSON valide, même si l'appelant en demande un
+        # (ex. app.services.qualifier) : ça exerce réellement le chemin de
+        # repli défensif de l'appelant plutôt que de le contourner en lui
+        # fournissant une réponse toute faite.
+        return prompt[:_MOCK_EXTRAIT] + _MOCK_SUFFIXE
 
 
 class GeminiProvider(LLMProvider):
@@ -135,6 +154,34 @@ class GeminiProvider(LLMProvider):
             # DNS, timeout, HTTP 4xx/5xx, JSON inattendu... même issue pour tous.
             # C'est différent d'un except nu ailleurs, qui masquerait un vrai bug.
             return MockProvider().resumer(titre, contenu)
+
+    def generer(self, prompt: str) -> str:
+        """Envoie ``prompt`` tel quel à Gemini, sans reconstruire de prompt.
+
+        Même contrat de résilience que ``resumer`` : toute erreur retombe sur
+        ``MockProvider.generer``, jamais d'exception qui remonte à l'appelant.
+        """
+        try:
+            if not self._api_key:
+                raise RuntimeError("GEMINI_API_KEY non configurée")
+
+            response = httpx.post(
+                _GEMINI_URL,
+                headers={"x-goog-api-key": self._api_key},
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+                timeout=_GEMINI_TIMEOUT,
+            )
+            response.raise_for_status()
+
+            texte = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            texte = texte.strip()
+            if not texte:
+                raise ValueError("réponse Gemini vide")
+            return texte
+
+        except Exception:
+            # Voir le commentaire équivalent dans ``resumer`` : même contrat.
+            return MockProvider().generer(prompt)
 
 
 def get_llm_provider() -> LLMProvider:

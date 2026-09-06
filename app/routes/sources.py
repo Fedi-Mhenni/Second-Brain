@@ -4,7 +4,8 @@
 - ``PATCH /sources/{id}/folder``     — Ranger : rattache la Source à un Folder
 - ``POST  /sources/{id}/digest``     — Digérer (manuel) : crée/met à jour l'Article lié
 - ``POST  /sources/{id}/digest/auto`` — Digérer (auto) : résumé généré par LLMProvider
-- ``POST  /sources/{id}/qualification`` — Qualifier : crée/met à jour la Qualification
+- ``POST  /sources/{id}/qualification`` — Qualifier (manuel) : crée/met à jour la Qualification
+- ``POST  /sources/{id}/qualification/auto`` — Qualifier (auto) : categorie/legitimite/interet déduits par LLMProvider
 
 ``SourceIntrouvable`` existe dans deux services (``ranger`` et ``digerer``) et
 n'a pas été fusionné (hors périmètre) : on importe les deux, avec alias, et
@@ -25,7 +26,7 @@ from app.services.digerer import (
     digerer_source,
     digerer_source_auto,
 )
-from app.services.qualifier import qualifier_source
+from app.services.qualifier import qualifier_source, qualifier_source_auto
 from app.services.ranger import (
     FolderIntrouvable,
     SourceIntrouvable as SourceIntrouvableRanger,
@@ -102,14 +103,30 @@ class QualifierSourceIn(BaseModel):
 
 
 class QualificationOut(BaseModel):
-    """Une Qualification telle que renvoyée par l'API."""
+    """Une Qualification telle que renvoyée par l'API.
+
+    ``categorie``/``legitimite``/``interet`` sont ``| None`` : toujours
+    renseignés par la qualification manuelle (contrainte du schéma d'entrée),
+    potentiellement absents pour la qualification automatique si la réponse
+    du modèle était incomplète ou malformée (voir app.services.qualifier).
+    """
 
     id: int
     source_id: int
-    categorie: str
-    legitimite: int
-    interet: int
+    categorie: str | None
+    legitimite: int | None
+    interet: int | None
     qualified_by: str
+
+
+class QualificationAutoOut(QualificationOut):
+    """Comme ``QualificationOut``, plus le nom du provider LLM ayant qualifié.
+
+    Même convention que ``ArticleAutoOut`` ci-dessus : "GeminiProvider" si le
+    vrai appel a réussi, "MockProvider" en repli (ou sans clé configurée).
+    """
+
+    provider: str
 
 
 @router.get("", response_model=list[SourceOut])
@@ -278,4 +295,35 @@ def qualifier_source_route(
         legitimite=qualification.legitimite,
         interet=qualification.interet,
         qualified_by=qualification.qualified_by,
+    )
+
+
+@router.post(
+    "/{source_id}/qualification/auto",
+    response_model=QualificationAutoOut,
+    status_code=status.HTTP_200_OK,
+)
+def qualifier_source_auto_route(source_id: int, db: Session = Depends(get_db)):
+    """Qualifie la Source automatiquement : categorie/legitimite/interet déduits
+    par le ``LLMProvider`` courant à partir de son titre/contenu.
+
+    Aucun body. 404 si la Source n'existe pas (voir
+    ``app.services.qualifier``). Une réponse IA malformée ne fait jamais
+    échouer la requête : les champs concernés reviennent à ``None``.
+    """
+    try:
+        qualification, provider = qualifier_source_auto(db, source_id)
+    except SourceIntrouvableRanger:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source introuvable"
+        )
+
+    return QualificationAutoOut(
+        id=qualification.id,
+        source_id=qualification.source_id,
+        categorie=qualification.categorie,
+        legitimite=qualification.legitimite,
+        interet=qualification.interet,
+        qualified_by=qualification.qualified_by,
+        provider=provider,
     )

@@ -4,8 +4,9 @@ Deux points d'entrée :
 - ``capture_url``  : télécharge une page, en extrait titre + contenu, crée une Source ;
 - ``capture_note`` : enregistre directement un texte libre (aucun accès réseau).
 
-Les routes ``POST /capture/url`` et ``POST /capture/note`` ne font que valider
-l'entrée et appeler la fonction correspondante.
+Les routes ``POST /api/capture/url`` et ``POST /api/capture/note`` ne font que
+valider l'entrée et appeler la fonction correspondante (idem pour le
+formulaire HTML de ``app/routes/web.py``, qui appelle ces mêmes fonctions).
 """
 
 from dataclasses import dataclass

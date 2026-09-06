@@ -21,7 +21,7 @@ class Source(Base):
     id = Column(Integer, primary_key=True)
 
     # L'URL captée, pour une Source issue d'une page web.
-    # ``nullable=True`` : une note libre (POST /capture/note) n'a pas d'URL.
+    # ``nullable=True`` : une note libre (POST /api/capture/note) n'a pas d'URL.
     # ``unique=True``  : jamais deux fois la même URL ; plusieurs NULL restent permis
     #                    (SQLite comme PostgreSQL traitent les NULL comme distincts).
     # ``index=True``   : recherche rapide par URL (pour tester si elle existe déjà).

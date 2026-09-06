@@ -15,9 +15,12 @@ capture n'existe qu'à un seul endroit, seule la façon de la présenter change.
 
 Ces routes elles-mêmes ne portent aucune logique métier (règle de
 CLAUDE.md) : chaque route appelle le service puis rend un template ou
-redirige, rien de plus. ``POST /capture`` (ici) et ``POST /capture/url`` /
-``POST /capture/note`` (API JSON) sont des chemins distincts par
+redirige, rien de plus. ``POST /capture`` (ici) et ``POST /api/capture/url`` /
+``POST /api/capture/note`` (API JSON) sont des chemins distincts par
 construction : aucun risque de collision de route entre les deux fichiers.
+Même logique pour ``GET /sources`` (ici, page HTML) face à
+``GET /api/sources`` (JSON, ``app/routes/sources.py``) : les deux servaient
+le même chemin avant l'introduction du prefixe ``/api`` sur les routers JSON.
 """
 
 from fastapi import APIRouter, Depends, Form, Request

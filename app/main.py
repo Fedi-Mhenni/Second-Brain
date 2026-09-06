@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routes import capture, web
+from app.routes import capture, folders, sources, web
 
 
 @asynccontextmanager
@@ -36,9 +36,16 @@ app.state.templates = Jinja2Templates(directory="app/templates")
 # dossier app/static/ (ici, la feuille de style unique demandée).
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Branche les routes de capture (POST /capture/url, POST /capture/note — API JSON)
-# et les routes web (dashboard, formulaire, liste des sources — HTML).
+# API JSON, sous /api : capture (POST /api/capture/url, POST /api/capture/note),
+# dossiers (GET /api/folders), sources (GET /api/sources, PATCH .../folder, POST .../digest).
+# Toutes les routes JSON vivent sous ce prefixe pour ne jamais entrer en
+# collision avec les pages HTML de web.py, qui occupent les chemins "nus"
+# (ex. GET /sources sert la page HTML, GET /api/sources la liste JSON).
 app.include_router(capture.router)
+app.include_router(folders.router)
+app.include_router(sources.router)
+
+# Routes web HTML (dashboard, formulaire, liste des sources).
 app.include_router(web.router)
 
 

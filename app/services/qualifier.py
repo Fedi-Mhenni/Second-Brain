@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Qualification, Source
 from app.models.qualification import CATEGORIES
-from app.models.source import STATUTS
+from app.models.source import avancer_statut
 from app.services.llm_provider import get_llm_provider
 from app.services.ranger import SourceIntrouvable
 
@@ -68,11 +68,9 @@ def qualifier_source(
     qualification.interet = interet
     qualification.qualified_by = qualified_by
 
-    # ``STATUTS.index(x)`` = position de x dans l'ordre du workflow : plus
-    # petit = plus tôt. On n'avance le statut que si on n'a pas déjà dépassé
-    # l'étape "qualified" (ex. une Source "digested" reste "digested").
-    if STATUTS.index(source.statut) < STATUTS.index("qualified"):
-        source.statut = "qualified"
+    # Règle d'avancement commune aux trois services (Ranger/Qualifier/Digérer) :
+    # voir avancer_statut (app/models/source.py).
+    avancer_statut(source, "qualified")
 
     db.commit()
     db.refresh(qualification)

@@ -53,10 +53,12 @@ from app.services.ranger import (
     ranger_source,
 )
 from app.services.republier import (
+    ArticleIntrouvable,
     RepublicationIntrouvable,
     publier_republication,
     republier_article,
 )
+from app.services.tagging import taguer_article
 
 router = APIRouter()
 
@@ -242,6 +244,33 @@ def fiche_republier_route(
         db, source.article.id, canal=canal, brouillon=brouillon, posture=posture
     )
     return RedirectResponse(f"/republications/{republication.id}", status_code=303)
+
+
+@router.post("/liste/{source_id}/tags")
+def fiche_tag_route(
+    source_id: int,
+    db: Session = Depends(get_db),
+    nom: str = Form(...),
+    added_by: Literal["ai", "manual"] = Form(default="manual"),
+):
+    """Associe un Tag à l'Article de cette Source, revient sur sa fiche.
+
+    Même garde que fiche_republier_route : le formulaire n'est rendu que si
+    source.article existe (voir fiche_source.html). ``ArticleIntrouvable``
+    reste catchée malgré tout, même pattern que les autres actions de ce
+    fichier (Qualifier/Ranger/Digérer) : chaque service traduit sa propre
+    exception, indépendamment de la garde déjà posée ici.
+    """
+    source = db.get(Source, source_id)
+    if source is None or source.article is None:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    try:
+        taguer_article(db, source.article.id, nom=nom, added_by=added_by)
+    except ArticleIntrouvable:
+        raise HTTPException(status_code=404, detail="Article introuvable")
+
+    return RedirectResponse(f"/liste/{source_id}", status_code=303)
 
 
 @router.get("/republications")

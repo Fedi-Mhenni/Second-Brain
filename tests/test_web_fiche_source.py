@@ -5,7 +5,7 @@ ici on vérifie seulement le branchement HTML (code retour, redirection, 404),
 pas la logique métier elle-même.
 """
 
-from app.models import Article, Folder, Qualification, Republication, Source
+from app.models import Article, ArticleTag, Folder, Qualification, Republication, Source, Tag
 from app.services.llm_provider import MockProvider
 
 
@@ -15,6 +15,23 @@ def _creer_source(test_db, *, statut: str = "captured", contenu_brut: str = "Con
     db.add(source)
     db.commit()
     db.refresh(source)
+    source_id = source.id
+    db.close()
+    return source_id
+
+
+def _creer_source_avec_article(test_db, *, statut: str = "digested") -> int:
+    db = test_db()
+    source = Source(url=None, titre="Titre", contenu_brut="Contenu.", statut=statut)
+    db.add(source)
+    db.commit()
+    db.refresh(source)
+
+    db.add(
+        Article(source_id=source.id, titre="Article", contenu="Contenu.", resume="Résumé.")
+    )
+    db.commit()
+
     source_id = source.id
     db.close()
     return source_id
@@ -316,4 +333,52 @@ def test_fiche_republier_source_introuvable_404(client, test_db):
 
     db = test_db()
     assert db.query(Republication).count() == 0
+    db.close()
+
+
+def test_fiche_tag_nominal(client, test_db):
+    source_id = _creer_source_avec_article(test_db)
+
+    r = client.post(
+        f"/liste/{source_id}/tags",
+        data={"nom": "Design", "added_by": "manual"},
+        follow_redirects=False,
+    )
+
+    assert r.status_code == 303
+    assert r.headers["location"] == f"/liste/{source_id}"
+
+    db = test_db()
+    assert db.query(Tag).filter_by(nom="Design").count() == 1
+    assert db.query(ArticleTag).count() == 1
+    db.close()
+
+
+def test_fiche_tag_source_sans_article_404(client, test_db):
+    source_id = _creer_source(test_db)  # sans article
+
+    r = client.post(f"/liste/{source_id}/tags", data={"nom": "Design"})
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Source introuvable"
+
+    db = test_db()
+    assert db.query(ArticleTag).count() == 0
+    db.close()
+
+
+def test_fiche_tag_deux_fois_pas_de_doublon(client, test_db):
+    source_id = _creer_source_avec_article(test_db)
+
+    client.post(f"/liste/{source_id}/tags", data={"nom": "Design", "added_by": "manual"})
+    r = client.post(
+        f"/liste/{source_id}/tags",
+        data={"nom": "Design", "added_by": "manual"},
+        follow_redirects=False,
+    )
+
+    assert r.status_code == 303
+
+    db = test_db()
+    assert db.query(ArticleTag).count() == 1
     db.close()

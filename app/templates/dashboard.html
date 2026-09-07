@@ -1,48 +1,67 @@
 {% extends "layout.html" %}
 {% block title %}Dashboard — Second Brain{% endblock %}
+{% block body_class %}page-cyber{% endblock %}
 {% block content %}
-    <section class="hero-produit surface-3d">
-        <div>
-            <p class="eyebrow">Veille augmentee</p>
-            <h1>Dashboard</h1>
-            <p class="hero-produit__texte">
-                Centralisez vos sources, transformez-les en syntheses actionnables,
-                puis preparez vos republications sans perdre le fil.
-            </p>
-        </div>
-        <div class="orbite-3d" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
+    <section class="cyber-hero">
+        {# Skyline décorative, purement visuelle : aria-hidden, aucun texte, la
+           page reste lisible et compréhensible sans elle. #}
+        <svg class="cyber-skyline" viewBox="0 0 640 90" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 90 V60 h24 V40 h16 V70 h20 V30 h14 V70 h30 V50 h18 V72 h22 V22 h12 V72 h34 V54 h16 V74 h26 V38 h14 V74 h28 V60 h20 V44 h16 V74 h30 V28 h12 V74 h40 V52 h18 V74 h24 V34 h14 V74 h30 V62 h22 V46 h16 V74 h28 V26 h12 V90 Z"/>
+        </svg>
+        <p class="cyber-eyebrow">Second Brain // pipeline de veille</p>
+        <h1>Dashboard</h1>
+        <p class="cyber-hero__sub">Une source entre&nbsp;— une connaissance publiable en sort.</p>
+    </section>
+
+    {# --- Élément central : le workflow réel, en pipeline néon --- #}
+    <section class="cyber-pipeline" aria-label="Workflow : de la source brute à la connaissance publiée">
+        <span class="cyber-io cyber-io--in">Source<br><small>URL ou note</small></span>
+
+        <ol class="cyber-steps">
+            <li class="cyber-step" style="--i: 0">
+                <span class="cyber-step__num">1</span>
+                <span class="cyber-step__name">Capter</span>
+                <span class="cyber-step__desc">on collecte l'URL ou la note</span>
+            </li>
+            <li class="cyber-step" style="--i: 1">
+                <span class="cyber-step__num">2</span>
+                <span class="cyber-step__name">Qualifier</span>
+                <span class="cyber-step__desc">catégorie, légitimité, intérêt</span>
+            </li>
+            <li class="cyber-step" style="--i: 2">
+                <span class="cyber-step__num">3</span>
+                <span class="cyber-step__name">Ranger</span>
+                <span class="cyber-step__desc">dans un dossier thématique</span>
+            </li>
+            <li class="cyber-step" style="--i: 3">
+                <span class="cyber-step__num">4</span>
+                <span class="cyber-step__name">Digérer</span>
+                <span class="cyber-step__desc">résumé généré ou écrit à la main</span>
+            </li>
+            <li class="cyber-step" style="--i: 4">
+                <span class="cyber-step__num">5</span>
+                <span class="cyber-step__name">Republier</span>
+                <span class="cyber-step__desc">brouillon LinkedIn / X prêt à poster</span>
+            </li>
+        </ol>
+
+        <span class="cyber-io cyber-io--out">Connaissance<br><small>publiable</small></span>
     </section>
 
     {% if total == 0 %}
-        {# Cet encart d'accueil ne s'affiche que tant qu'aucune source n'existe
-           (total == 0) : il disparaît tout seul dès la première capture. Il
-           remplace l'ancienne visite guidée en JS. #}
-        <section class="etat-vide reveal">
-            <p class="eyebrow">Premier pas</p>
+        {# Encart d'accueil : visible uniquement tant qu'aucune source n'existe,
+           disparaît tout seul à la première capture. #}
+        <section class="cyber-panel">
+            <p class="cyber-eyebrow">Premier pas</p>
             <h2>Aucune source capturée pour l'instant.</h2>
-            <p>
-                Second Brain transforme une source (un article, une note) en
-                connaissance réutilisable, en cinq étapes :
-            </p>
-            <p class="etat-vide__workflow">
-                Capter <span aria-hidden="true">&rarr;</span>
-                Qualifier <span aria-hidden="true">&rarr;</span>
-                Ranger <span aria-hidden="true">&rarr;</span>
-                Digérer <span aria-hidden="true">&rarr;</span>
-                Republier
-            </p>
-            <p>Commencez par capturer une URL ou une note.</p>
-            <a class="bouton" href="/capture">Capturer une première source</a>
+            <p>Suivez le pipeline ci-dessus : commencez par capturer une URL ou une note.</p>
+            <a class="cyber-cta" href="/capture">Capturer une première source</a>
         </section>
     {% else %}
-        <section class="stat-dashboard reveal">
-            <span class="stat-dashboard__nombre">{{ total }}</span>
-            <p>source{{ "s" if total > 1 else "" }} capturée{{ "s" if total > 1 else "" }} au total.</p>
-            <a class="bouton" href="/liste">Voir toutes les sources</a>
+        <section class="cyber-panel cyber-panel--stat">
+            <span class="cyber-stat__num">{{ total }}</span>
+            <p>source{{ "s" if total > 1 else "" }} dans le pipeline.</p>
+            <a class="cyber-cta" href="/liste">Voir toutes les sources</a>
         </section>
     {% endif %}
 {% endblock %}

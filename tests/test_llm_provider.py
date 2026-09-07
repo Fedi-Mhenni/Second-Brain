@@ -142,3 +142,28 @@ def test_get_llm_provider_sans_cle(monkeypatch):
     provider = get_llm_provider()
     assert isinstance(provider, LLMProvider)
     assert isinstance(provider, MockProvider)
+
+
+# --- _construire_prompt : injection du profil de veille ------------------------
+
+
+def test_prompt_contient_le_profil_veille(monkeypatch):
+    """Le PROFIL_VEILLE de l'instance doit apparaître dans le prompt envoyé à Gemini."""
+    monkeypatch.setattr(
+        "app.services.llm_provider.PROFIL_VEILLE",
+        "un trader qui suit la régulation crypto",
+    )
+
+    prompt = GeminiProvider()._construire_prompt(_TITRE, _CONTENU)
+
+    assert "un trader qui suit la régulation crypto" in prompt
+    assert "sans changer les faits" in prompt
+
+
+def test_prompt_garde_le_format_3_a_5_phrases(monkeypatch):
+    """L'injection du profil ne doit pas casser la consigne de format existante."""
+    prompt = GeminiProvider()._construire_prompt(_TITRE, _CONTENU)
+
+    assert "en 3 à 5 phrases" in prompt
+    assert f"Titre : {_TITRE}" in prompt
+    assert _CONTENU in prompt

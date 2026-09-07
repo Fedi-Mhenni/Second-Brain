@@ -16,6 +16,8 @@ from abc import ABC, abstractmethod
 import httpx
 from dotenv import load_dotenv
 
+from app.config import PROFIL_VEILLE
+
 # Charge les variables de .env dans l'environnement (idempotent : sans effet si
 # déjà fait ailleurs, ex. app/database.py).
 load_dotenv()
@@ -110,8 +112,15 @@ class GeminiProvider(LLMProvider):
         self._api_key = os.getenv("GEMINI_API_KEY")
 
     def _construire_prompt(self, titre: str, contenu: str) -> str:
-        """Assemble l'instruction envoyée au modèle."""
+        """Assemble l'instruction envoyée au modèle.
+
+        La 1re ligne injecte ``PROFIL_VEILLE`` (app/config.py) : elle oriente le
+        ton et les angles selon le profil de l'instance, sans toucher aux faits.
+        Le reste (format « 3 à 5 phrases en français ») est inchangé.
+        """
         return (
+            f"Tu résumes pour {PROFIL_VEILLE} : adapte les angles et le "
+            "vocabulaire à ce profil, sans changer les faits.\n\n"
             "Résume en français, en 3 à 5 phrases, l'article suivant. "
             "Réponds uniquement par le résumé, sans introduction.\n\n"
             f"Titre : {titre}\n\n"

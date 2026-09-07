@@ -20,20 +20,34 @@
     >
     <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
 </head>
-<body>
-    <header class="entete" data-guide="navigation">
+<body class="{% block body_class %}{% endblock %}">
+    <header class="entete">
         <a class="marque" href="/">Second Brain</a>
         <nav aria-label="Navigation principale">
             <a href="/">Dashboard</a>
-            <a href="/capture" data-guide="capture-link">Capturer</a>
-            <a href="/liste" data-guide="sources-link">Sources</a>
-            <a href="/republications" data-guide="republications-link">Mes republications</a>
+            <a href="/capture">Capturer</a>
+            <a href="/republications">Mes republications</a>
         </nav>
-        <button class="aide-guide" type="button" data-guide-start>Guide</button>
     </header>
-    <main class="contenu" data-guide="workspace">
+    <main class="contenu">
         {% block content %}{% endblock %}
     </main>
-    <script src="{{ url_for('static', path='guide.js') }}" defer></script>
+    <footer class="pied">
+        <div class="pied__col">
+            <span class="pied__logo">Second Brain</span>
+            <p>Transforme une source en connaissance publiable. Instance personnelle&nbsp;: chacun sa base, ses données.</p>
+        </div>
+        <nav class="pied__col" aria-label="Pied de page">
+            <span class="pied__titre">Pages</span>
+            <a href="/">Dashboard</a>
+            <a href="/capture">Capturer</a>
+            <a href="/liste">Sources</a>
+            <a href="/republications">Republications</a>
+        </nav>
+        <div class="pied__col">
+            <span class="pied__titre">Le pipeline</span>
+            <p class="pied__flux">Capter <span aria-hidden="true">&rarr;</span> Qualifier <span aria-hidden="true">&rarr;</span> Ranger <span aria-hidden="true">&rarr;</span> Digérer <span aria-hidden="true">&rarr;</span> Republier</p>
+        </div>
+    </footer>
 </body>
 </html>

@@ -10,6 +10,7 @@
             <p class="erreur">Seules les URL http:// ou https:// sont acceptées.</p>
         {% endif %}
 
+        <div class="grille-formulaires">
         <section class="section-fiche reveal">
             <h2>
                 Depuis une URL
@@ -46,10 +47,11 @@
             <form method="post" action="/capture">
                 <div class="champ">
                     <label for="texte">Votre note</label>
-                    <textarea id="texte" name="texte" rows="4" placeholder="Votre note…" required></textarea>
+                    <textarea id="texte" name="texte" rows="8" placeholder="Votre note…" required></textarea>
                 </div>
                 <button type="submit" class="bouton">Capter la note</button>
             </form>
         </section>
+        </div>
     </div>
 {% endblock %}

@@ -494,25 +494,6 @@ body {
     transform: translateY(-1px);
 }
 
-.aide-guide {
-    padding: 0.55rem 0.85rem;
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    color: var(--accent-fonce);
-    background: transparent;
-    font: inherit;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
-}
-
-.aide-guide:hover,
-.aide-guide:focus-visible {
-    color: white;
-    background: var(--accent);
-    transform: translateY(-1px);
-}
-
 .contenu {
     max-width: 1040px;
     padding: clamp(2rem, 5vw, 4.5rem) clamp(1rem, 4vw, 3rem);
@@ -537,6 +518,20 @@ h1 {
     box-shadow: var(--ombre-carte);
 }
 
+/* Frise du workflow dans l'encart d'accueil (Dashboard, quand total == 0). */
+.etat-vide__workflow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    align-items: center;
+    font-weight: 600;
+    color: var(--accent-fonce);
+}
+
+.etat-vide__workflow span {
+    color: var(--accent);
+}
+
 .hero-produit {
     position: relative;
     display: flex;
@@ -552,8 +547,7 @@ h1 {
     font-size: clamp(2rem, 5vw, 3.5rem);
 }
 
-.eyebrow,
-.guide-count {
+.eyebrow {
     margin: 0;
     color: var(--accent-fonce);
     font-size: 0.75rem;
@@ -690,74 +684,6 @@ h1 {
     outline: none;
 }
 
-.guide-ouvert {
-    overflow: hidden;
-}
-
-.guide-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: rgba(12, 25, 43, 0.66);
-}
-
-.guide-spotlight {
-    position: fixed;
-    border: 2px solid #8de3d7;
-    border-radius: 12px;
-    box-shadow: 0 0 0 9999px rgba(12, 25, 43, 0.66), 0 0 26px rgba(141, 227, 215, 0.35);
-    pointer-events: none;
-    transition: top 220ms ease, left 220ms ease, width 220ms ease, height 220ms ease;
-}
-
-.guide-dialog {
-    position: fixed;
-    width: min(360px, calc(100vw - 32px));
-    padding: 1.25rem;
-    border: 1px solid rgba(141, 227, 215, 0.4);
-    border-radius: 12px;
-    color: #eefcf9;
-    background: #173246;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.guide-dialog h2 {
-    margin: 0.45rem 2rem 0.35rem 0;
-    font-size: 1.15rem;
-}
-
-.guide-dialog p:not(.guide-count) {
-    margin: 0;
-    color: #c8dbd9;
-}
-
-.guide-close {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    width: 32px;
-    height: 32px;
-    border: 0;
-    border-radius: 50%;
-    color: #eefcf9;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 1.25rem;
-    cursor: pointer;
-}
-
-.guide-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-}
-
-.guide-actions .bouton-secondaire {
-    color: #d5eeea;
-    background: transparent;
-    border-color: rgba(213, 238, 234, 0.45);
-}
-
 .reveal {
     animation: reveal-up 420ms ease both;
 }
@@ -871,4 +797,568 @@ h1 {
     .bouton:focus-visible {
         transform: none;
     }
+}
+
+
+/* ======================================================================
+   Thème cyberpunk — page Dashboard uniquement (body.page-cyber).
+   Sombre, néon cyan/magenta/violet, glow via box-shadow/text-shadow.
+   Pas de JS, pas de dépendance. Les animations sont neutralisées par le
+   bloc @media (prefers-reduced-motion) plus haut (règle universelle).
+   ====================================================================== */
+
+body.page-cyber {
+    --cy-bg: #06060f;
+    --cy-bg-2: #0c0c1c;
+    --cy-panel: rgba(20, 20, 44, 0.72);
+    --cy-bordure: rgba(124, 122, 255, 0.32);
+    --cy-text: #e3ecff;
+    --cy-dim: #a7afe0;
+    --cy-cyan: #22d3ee;
+    --cy-magenta: #f65fd6;
+    --cy-violet: #a78bfa;
+
+    color: var(--cy-text);
+    background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(34, 211, 238, 0.14), transparent 60%),
+        radial-gradient(1000px 500px at 100% 0%, rgba(246, 95, 214, 0.12), transparent 55%),
+        var(--cy-bg);
+}
+
+body.page-cyber .entete {
+    background: rgba(6, 6, 15, 0.85);
+    border-bottom: 1px solid var(--cy-bordure);
+    backdrop-filter: blur(6px);
+}
+
+body.page-cyber .marque {
+    color: var(--cy-text);
+    text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+
+body.page-cyber .entete nav a {
+    color: var(--cy-cyan);
+}
+
+body.page-cyber .contenu {
+    max-width: 960px;
+}
+
+/* --- Hero + skyline décorative --- */
+
+.cyber-hero {
+    position: relative;
+    padding: 2.4rem 1.6rem 3rem;
+    border: 1px solid var(--cy-bordure);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(18, 18, 44, 0.6), rgba(8, 8, 20, 0.6));
+    overflow: hidden;
+}
+
+.cyber-skyline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 90px;
+    fill: rgba(167, 139, 250, 0.16);
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.25));
+}
+
+.cyber-eyebrow {
+    margin: 0 0 0.4rem;
+    color: var(--cy-cyan);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+.cyber-hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.45), 0 0 40px rgba(246, 95, 214, 0.25);
+}
+
+.cyber-hero__sub {
+    margin: 0.6rem 0 0;
+    color: var(--cy-dim);
+    font-size: 1.05rem;
+}
+
+/* --- Pipeline : l'élément central --- */
+
+.cyber-pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin: 1.6rem 0;
+    padding: 1.4rem 1rem;
+    border: 1px solid var(--cy-bordure);
+    border-radius: 16px;
+    background: var(--cy-panel);
+    overflow-x: auto;            /* sur petit écran : le pipeline défile, il ne s'écrase pas */
+}
+
+.cyber-io {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0.75rem 0.9rem;
+    border: 1px dashed rgba(167, 139, 250, 0.6);
+    border-radius: 12px;
+    color: var(--cy-violet);
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.cyber-io small {
+    color: var(--cy-dim);
+    font-weight: 400;
+}
+
+.cyber-io--in {
+    box-shadow: inset 0 0 20px rgba(167, 139, 250, 0.18);
+}
+
+.cyber-io--out {
+    color: var(--cy-cyan);
+    border-color: rgba(34, 211, 238, 0.6);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.25), inset 0 0 20px rgba(34, 211, 238, 0.15);
+}
+
+.cyber-steps {
+    display: flex;
+    gap: 2rem;                   /* la place des connecteurs vit dans ce gap */
+    align-items: stretch;
+    margin: 0;
+    padding: 0 0.5rem;
+    list-style: none;
+}
+
+.cyber-step {
+    position: relative;
+    flex: 0 0 auto;
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.9rem 0.85rem;
+    border: 1px solid var(--cy-cyan);
+    border-radius: 12px;
+    background: rgba(10, 12, 30, 0.85);
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.28), inset 0 0 14px rgba(34, 211, 238, 0.08);
+    animation: cyber-pulse 3.2s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.4s);
+}
+
+.cyber-step:nth-child(even) {
+    border-color: var(--cy-magenta);
+    box-shadow: 0 0 18px rgba(246, 95, 214, 0.28), inset 0 0 14px rgba(246, 95, 214, 0.08);
+}
+
+/* Connecteur néon vers l'étape suivante (dessiné dans le gap). */
+.cyber-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 2rem;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cy-cyan), var(--cy-magenta));
+    background-size: 200% 100%;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+    animation: cyber-flow 2.4s linear infinite;
+}
+
+/* Petite flèche au bout du connecteur. */
+.cyber-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 2rem);
+    transform: translate(-6px, -50%);
+    border: 5px solid transparent;
+    border-left-color: var(--cy-magenta);
+    filter: drop-shadow(0 0 4px rgba(246, 95, 214, 0.7));
+}
+
+.cyber-step__num {
+    align-self: flex-start;
+    min-width: 1.6rem;
+    padding: 0.1rem 0;
+    border-radius: 6px;
+    color: var(--cy-bg);
+    background: var(--cy-cyan);
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.cyber-step:nth-child(even) .cyber-step__num {
+    background: var(--cy-magenta);
+}
+
+.cyber-step__name {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.cyber-step__desc {
+    color: var(--cy-dim);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+/* --- Panneaux (accueil / stat) --- */
+
+.cyber-panel {
+    margin-top: 1.4rem;
+    padding: 1.6rem;
+    border: 1px solid var(--cy-bordure);
+    border-radius: 16px;
+    background: var(--cy-panel);
+}
+
+.cyber-panel h2 {
+    margin: 0.2rem 0 0.6rem;
+}
+
+.cyber-panel p {
+    color: var(--cy-dim);
+}
+
+.cyber-stat__num {
+    display: block;
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--cy-cyan);
+    text-shadow: 0 0 22px rgba(34, 211, 238, 0.5);
+}
+
+.cyber-cta {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.7rem 1.2rem;
+    border: 1px solid var(--cy-cyan);
+    border-radius: 10px;
+    color: var(--cy-text);
+    text-decoration: none;
+    font-weight: 700;
+    background: rgba(34, 211, 238, 0.12);
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.3);
+    transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.cyber-cta:hover,
+.cyber-cta:focus-visible {
+    background: rgba(34, 211, 238, 0.24);
+    box-shadow: 0 0 28px rgba(34, 211, 238, 0.5);
+    transform: translateY(-1px);
+}
+
+@keyframes cyber-pulse {
+    0%, 100% { box-shadow: 0 0 14px rgba(34, 211, 238, 0.22), inset 0 0 12px rgba(34, 211, 238, 0.06); }
+    50%      { box-shadow: 0 0 26px rgba(34, 211, 238, 0.45), inset 0 0 16px rgba(34, 211, 238, 0.12); }
+}
+
+@keyframes cyber-flow {
+    from { background-position: 200% 0; }
+    to   { background-position: 0 0; }
+}
+
+@media (max-width: 640px) {
+    .cyber-steps {
+        gap: 1.6rem;
+    }
+    .cyber-step {
+        width: 132px;
+    }
+    .cyber-step:not(:last-child)::after {
+        width: 1.6rem;
+    }
+    .cyber-step:not(:last-child)::before {
+        left: calc(100% + 1.6rem);
+    }
+}
+
+
+/* ======================================================================
+   THÈME CYBERPUNK GLOBAL — toutes les pages.
+   Le CSS existant est piloté par variables : redéfinir la palette ici
+   (ce :root est le dernier du fichier, il gagne la cascade) bascule
+   l'app en sombre sans réécrire les règles. Suivent quelques correctifs
+   pour les valeurs qui étaient codées en dur (badges, erreurs, formulaires).
+   Contrastes texte/fond vérifiés >= 4.5:1 (WCAG AA).
+   ====================================================================== */
+
+:root {
+    --couleur-texte: #e3ecff;
+    --couleur-fond: #06060f;
+    --couleur-bordure: rgba(124, 122, 255, 0.28);
+    --couleur-accent: #7c5cff;
+
+    --fond: #06060f;
+    --carte: #12122a;
+    --bordure: rgba(124, 122, 255, 0.28);
+    --texte: #e3ecff;
+    --texte-secondaire: #a7afe0;
+    --accent: #7c5cff;
+    --accent-fonce: #a78bfa;
+    --accent-doux: rgba(124, 92, 255, 0.16);
+    --ombre-carte: 0 0 20px rgba(34, 211, 238, 0.10), 0 12px 30px rgba(0, 0, 0, 0.45);
+    --ombre-flottante: 0 0 30px rgba(246, 95, 214, 0.18), 0 18px 42px rgba(0, 0, 0, 0.55);
+}
+
+/* Structure : le body remplit la fenêtre et empile en colonne -> le footer
+   est toujours en bas, plus de bande claire sous le contenu. */
+html {
+    background: var(--fond);
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+        radial-gradient(1100px 520px at 12% -8%, rgba(34, 211, 238, 0.12), transparent 60%),
+        radial-gradient(900px 460px at 100% 0%, rgba(246, 95, 214, 0.10), transparent 55%),
+        var(--fond);
+    color: var(--texte);
+}
+
+/* ``width: 100%`` indispensable ici : dans un body en flex-column, la
+   ``margin: 0 auto`` héritée fait rétrécir .contenu à la largeur de son
+   contenu (d'où des formulaires minuscules). On force le remplissage, puis
+   ``max-width`` plafonne et ``margin-inline: auto`` recentre. */
+.contenu {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+}
+
+.entete {
+    background: rgba(6, 6, 15, 0.85);
+    border-bottom: 1px solid var(--bordure);
+    box-shadow: none;
+}
+
+.marque {
+    text-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+/* --- Formulaires : les champs n'avaient pas de fond -> rendu blanc navigateur --- */
+.formulaire,
+.formulaire input,
+.formulaire textarea,
+.champ input,
+.champ select,
+.champ textarea {
+    color: var(--texte);
+    background: #0d0d1f;
+    border: 1px solid var(--bordure);
+}
+
+.formulaire {
+    background: var(--carte);
+}
+
+.formulaire input::placeholder,
+.formulaire textarea::placeholder,
+.champ input::placeholder,
+.champ textarea::placeholder {
+    color: #7b83b8;
+}
+
+.formulaire input:focus,
+.formulaire textarea:focus,
+.champ input:focus,
+.champ select:focus,
+.champ textarea:focus {
+    border-color: var(--accent);
+    background: #14142c;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.35);
+}
+
+.formulaire button {
+    color: #ffffff;
+}
+
+.bouton-secondaire {
+    background: var(--carte);
+}
+
+.carte-source:hover,
+.section-fiche:hover,
+.liste-republications li:hover {
+    border-color: rgba(34, 211, 238, 0.45);
+}
+
+.vide {
+    color: var(--texte-secondaire);
+}
+
+.erreur {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.5);
+    color: #fecaca;
+}
+
+/* --- Badges de statut : versions sombres (fond teinté translucide + texte clair) --- */
+.badge-captured,
+.badge-draft {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.16);
+}
+
+.badge-qualified {
+    color: #bfdbfe;
+    background: rgba(59, 130, 246, 0.18);
+}
+
+.badge-ranged {
+    color: #ddd6fe;
+    background: rgba(167, 139, 250, 0.20);
+}
+
+.badge-digested {
+    color: #fed7aa;
+    background: rgba(251, 146, 60, 0.18);
+}
+
+.badge-published {
+    color: #a7f3d0;
+    background: rgba(52, 211, 153, 0.18);
+}
+
+/* --- Footer --- */
+.pied {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+    flex-shrink: 0;
+    padding: 2.2rem clamp(1rem, 4vw, 3rem);
+    border-top: 1px solid var(--bordure);
+    background: rgba(6, 6, 15, 0.92);
+    color: var(--texte-secondaire);
+    font-size: 0.9rem;
+    box-shadow: 0 -1px 26px rgba(34, 211, 238, 0.08);
+}
+
+.pied__col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 220px;
+}
+
+.pied__logo {
+    color: var(--texte);
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+.pied__titre {
+    color: var(--accent-fonce);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.pied p {
+    margin: 0;
+}
+
+.pied a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.pied a:hover,
+.pied a:focus-visible {
+    color: var(--accent-fonce);
+    text-decoration: underline;
+}
+
+.pied__flux span {
+    color: var(--accent);
+}
+
+/* --- Dashboard : que les 5 étoiles du pipeline tiennent sans scroll sur desktop --- */
+.page-cyber .contenu {
+    max-width: 1160px;
+}
+
+.cyber-steps {
+    gap: 1.7rem;
+}
+
+.cyber-step {
+    width: 138px;
+}
+
+.cyber-io {
+    padding: 0.7rem 0.8rem;
+}
+
+/* Encart "état vide" (page Republications) : la règle groupée plus haut lui
+   met un fond blanc translucide -> on le repasse en sombre. */
+.hero-produit,
+.stat-dashboard,
+.etat-vide {
+    background: var(--carte);
+    border-color: var(--bordure);
+}
+
+
+/* ======================================================================
+   Exploiter la largeur : les listes et les formulaires passent en grille
+   au lieu d'une colonne étroite centrée.
+   ====================================================================== */
+
+/* Page Capturer : les deux formulaires côte à côte sur écran large. */
+.grille-formulaires {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: var(--espace-md);
+    align-items: start;
+}
+
+.grille-formulaires .section-fiche {
+    margin-bottom: 0;
+}
+
+.grille-formulaires textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+}
+
+/* Page Sources : cartes en grille responsive plutôt qu'empilées. */
+.cartes-sources {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--espace-md);
+}
+
+/* Page Republications : idem, cartes en grille. */
+.liste-republications {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--espace-sm);
+}
+
+.liste-republications li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espace-xs) var(--espace-sm);
+    padding: var(--espace-md);
 }

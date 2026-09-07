@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Dashboard — Second Brain{% endblock %}
 {% block content %}
-    <section class="hero-produit surface-3d" data-guide="dashboard">
+    <section class="hero-produit surface-3d">
         <div>
             <p class="eyebrow">Veille augmentee</p>
             <h1>Dashboard</h1>
@@ -18,10 +18,24 @@
     </section>
 
     {% if total == 0 %}
+        {# Cet encart d'accueil ne s'affiche que tant qu'aucune source n'existe
+           (total == 0) : il disparaît tout seul dès la première capture. Il
+           remplace l'ancienne visite guidée en JS. #}
         <section class="etat-vide reveal">
             <p class="eyebrow">Premier pas</p>
             <h2>Aucune source capturée pour l'instant.</h2>
-            <p>Ajoutez une URL ou une note pour commencer votre base de veille.</p>
+            <p>
+                Second Brain transforme une source (un article, une note) en
+                connaissance réutilisable, en cinq étapes :
+            </p>
+            <p class="etat-vide__workflow">
+                Capter <span aria-hidden="true">&rarr;</span>
+                Qualifier <span aria-hidden="true">&rarr;</span>
+                Ranger <span aria-hidden="true">&rarr;</span>
+                Digérer <span aria-hidden="true">&rarr;</span>
+                Republier
+            </p>
+            <p>Commencez par capturer une URL ou une note.</p>
             <a class="bouton" href="/capture">Capturer une première source</a>
         </section>
     {% else %}

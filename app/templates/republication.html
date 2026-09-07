@@ -12,11 +12,16 @@
         <p class="section-fiche__meta">Posture : {{ republication.posture }}</p>
         <p class="section-fiche__meta">Créée le {{ republication.created_at.strftime("%d/%m/%Y") }}</p>
 
-        <section class="section-fiche">
+        <section class="section-fiche reveal">
             <div class="champ">
                 <label for="brouillon">Brouillon</label>
                 <textarea id="brouillon" rows="10">{{ republication.brouillon }}</textarea>
             </div>
+
+            <p class="section-fiche__meta">
+                Copiez ce texte puis publiez-le vous-même sur {{ republication.canal }} :
+                aucune publication automatique n'est effectuée.
+            </p>
 
             <button type="button" id="bouton-copier" class="bouton">Copier</button>
             <span id="confirmation-copie" class="section-fiche__meta" hidden>Copié dans le presse-papiers !</span>

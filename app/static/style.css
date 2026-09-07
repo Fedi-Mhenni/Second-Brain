@@ -767,6 +767,63 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ==========================================================================
+   AIDE CONTEXTUELLE — <details>/<summary> natif : accessible au clavier et
+   au tactile sans JavaScript (contrairement à un tooltip au survol, qui
+   échouerait sur mobile — voir consigne « jamais d'interaction qui
+   nécessite une souris »). Le contenu reste dans le DOM, donc toujours
+   lisible par un lecteur d'écran, ouvert ou non.
+   ========================================================================== */
+.aide {
+    display: inline-block;
+    margin-left: var(--espace-xs);
+    vertical-align: middle;
+}
+
+.aide summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--bordure);
+    color: var(--texte-secondaire);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    list-style: none;
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.aide summary::-webkit-details-marker {
+    display: none;
+}
+
+.aide summary:hover,
+.aide summary:focus-visible {
+    color: var(--accent-fonce);
+    border-color: var(--accent);
+    background: var(--accent-doux);
+}
+
+.aide[open] summary {
+    color: var(--accent-fonce);
+    border-color: var(--accent);
+}
+
+.aide__texte {
+    max-width: 32rem;
+    margin: var(--espace-xs) 0 var(--espace-sm) 0;
+    padding: var(--espace-sm);
+    border: 1px solid var(--bordure);
+    border-radius: 8px;
+    background: var(--accent-doux);
+    color: var(--texte-secondaire);
+    font-size: var(--taille-secondaire);
+}
+
 @media (max-width: 720px) {
     .entete {
         align-items: flex-start;

@@ -1,27 +1,55 @@
 {% extends "layout.html" %}
 {% block title %}Capturer — Second Brain{% endblock %}
 {% block content %}
-    <h1>Capturer</h1>
+    <div class="page-fiche">
+        <h1>Capturer</h1>
 
-    {% if erreur == "deja_captee" %}
-        <p class="erreur">Cette URL a déjà été captée.</p>
-    {% elif erreur == "schema_invalide" %}
-        <p class="erreur">Seules les URL http:// ou https:// sont acceptées.</p>
-    {% endif %}
+        {% if erreur == "deja_captee" %}
+            <p class="erreur">Cette URL a déjà été captée.</p>
+        {% elif erreur == "schema_invalide" %}
+            <p class="erreur">Seules les URL http:// ou https:// sont acceptées.</p>
+        {% endif %}
 
-    <section class="formulaire">
-        <h2>Depuis une URL</h2>
-        <form method="post" action="/capture">
-            <input type="url" name="url" placeholder="https://…" required>
-            <button type="submit">Capter l'URL</button>
-        </form>
-    </section>
+        <section class="section-fiche reveal">
+            <h2>
+                Depuis une URL
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Collez le lien d'une page web : son titre et son contenu sont
+                        récupérés automatiquement pour alimenter le reste du workflow
+                        (qualifier, ranger, digérer, republier).
+                    </p>
+                </details>
+            </h2>
+            <form method="post" action="/capture">
+                <div class="champ">
+                    <label for="url">Adresse de la page</label>
+                    <input type="url" id="url" name="url" placeholder="https://…" required>
+                </div>
+                <button type="submit" class="bouton">Capter l'URL</button>
+            </form>
+        </section>
 
-    <section class="formulaire">
-        <h2>Note libre</h2>
-        <form method="post" action="/capture">
-            <textarea name="texte" rows="4" placeholder="Votre note…" required></textarea>
-            <button type="submit">Capter la note</button>
-        </form>
-    </section>
+        <section class="section-fiche reveal">
+            <h2>
+                Note libre
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Pas d'URL sous la main ? Notez directement une idée ou un
+                        extrait : elle suit le même parcours qu'une source captée
+                        depuis une URL.
+                    </p>
+                </details>
+            </h2>
+            <form method="post" action="/capture">
+                <div class="champ">
+                    <label for="texte">Votre note</label>
+                    <textarea id="texte" name="texte" rows="4" placeholder="Votre note…" required></textarea>
+                </div>
+                <button type="submit" class="bouton">Capter la note</button>
+            </form>
+        </section>
+    </div>
 {% endblock %}

@@ -27,8 +27,18 @@
         {% endif %}
 
         {# ---------- Qualifier ---------- #}
-        <section class="section-fiche">
-            <h2>Qualification</h2>
+        <section class="section-fiche reveal">
+            <h2>
+                Qualification
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Catégorie, légitimité et intérêt (de 1 à 5) aident à prioriser
+                        vos sources. « Qualifier avec l'IA » propose une première
+                        évaluation, toujours modifiable à la main ensuite.
+                    </p>
+                </details>
+            </h2>
 
             {% if source.qualification %}
                 <p class="section-fiche__meta">
@@ -78,8 +88,17 @@
         </section>
 
         {# ---------- Ranger ---------- #}
-        <section class="section-fiche">
-            <h2>Rangement</h2>
+        <section class="section-fiche reveal">
+            <h2>
+                Rangement
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Rangez la source dans l'un de vos dossiers thématiques pour la
+                        retrouver facilement dans votre veille.
+                    </p>
+                </details>
+            </h2>
 
             {% if source.folder %}
                 <p class="section-fiche__meta">Dossier actuel : {{ source.folder.nom }}</p>
@@ -109,8 +128,18 @@
         </section>
 
         {# ---------- Digérer ---------- #}
-        <section class="section-fiche">
-            <h2>Digestion</h2>
+        <section class="section-fiche reveal">
+            <h2>
+                Digestion
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Rédigez une synthèse personnelle de la source. « Digérer avec
+                        l'IA » génère un premier résumé à partir du contenu brut, à
+                        affiner ensuite dans le champ ci-dessous.
+                    </p>
+                </details>
+            </h2>
 
             {% if source.article %}
                 <p class="section-fiche__meta">Titre de l'article : {{ source.article.titre or "(sans titre)" }}</p>
@@ -135,8 +164,18 @@
         </section>
 
         {# ---------- Tags ---------- #}
-        <section class="section-fiche">
-            <h2>Tags</h2>
+        <section class="section-fiche reveal">
+            <h2>
+                Tags
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Ajoutez des mots-clés libres pour retrouver cette source par
+                        thème. Un tag déjà utilisé sur une autre source est réutilisé
+                        automatiquement, jamais dupliqué.
+                    </p>
+                </details>
+            </h2>
 
             {% if source.article and source.article.article_tags %}
                 <ul class="liste-tags">
@@ -172,8 +211,18 @@
         </section>
 
         {# ---------- Republications ---------- #}
-        <section class="section-fiche">
-            <h2>Republications</h2>
+        <section class="section-fiche reveal">
+            <h2>
+                Republications
+                <details class="aide">
+                    <summary aria-label="Aide">?</summary>
+                    <p class="aide__texte">
+                        Préparez un brouillon pour LinkedIn ou X selon la posture
+                        souhaitée. Aucune publication automatique : vous copierez ce
+                        texte vous-même depuis la page de la republication.
+                    </p>
+                </details>
+            </h2>
 
             {% if source.article and source.article.republications %}
                 <ul class="liste-republications">

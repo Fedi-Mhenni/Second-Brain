@@ -5,9 +5,17 @@
         <h1>Mes republications</h1>
 
         {% if not republications %}
-            <p class="vide">Aucune republication pour l'instant.</p>
+            <section class="etat-vide reveal">
+                <p class="eyebrow">Republier</p>
+                <h2>Aucune republication pour l'instant.</h2>
+                <p>
+                    Une fois une source digérée, ouvrez sa fiche pour préparer un
+                    brouillon LinkedIn ou X.
+                </p>
+                <a class="bouton" href="/liste">Voir mes sources</a>
+            </section>
         {% else %}
-            <ul class="liste-republications">
+            <ul class="liste-republications reveal">
                 {% for republication in republications %}
                     <li>
                         <a

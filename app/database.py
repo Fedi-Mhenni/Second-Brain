@@ -16,7 +16,12 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import DATABASE_URL
 
-Path("data").mkdir(exist_ok=True)
+# Le dossier ``data/`` ne sert qu'au fichier SQLite local (dev). Sur un déploiement
+# comme Vercel, le système de fichiers est en lecture seule et DATABASE_URL pointe
+# vers Postgres (Supabase) : créer ce dossier dans ce cas planterait le démarrage
+# pour rien, d'où le garde-fou.
+if DATABASE_URL.startswith("sqlite"):
+    Path("data").mkdir(exist_ok=True)
 
 # ``check_same_thread=False`` ne concerne que SQLite : par défaut SQLite interdit
 # d'utiliser une connexion depuis un autre thread que celui qui l'a créée, or FastAPI

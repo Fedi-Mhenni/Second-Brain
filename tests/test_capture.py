@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from app.models import Source
-from app.services.capture import SchemaUrlNonAutorise, capture_url
+from app.services.capture import SchemaUrlNonAutorise, capture_url, fetch_page
 
 
 def _mock_httpx_get(monkeypatch, *, response=None, exception=None):
@@ -120,3 +120,58 @@ def test_capture_url_schema_javascript_rejete(test_db):
 
     assert db.query(Source).count() == 0
     db.close()
+
+
+# --- fetch_page : HTTP 200 mais aucun contenu exploitable -----------------------
+
+
+def test_fetch_page_contenu_vide_malgre_http_200(monkeypatch):
+    """Page qui répond 200 mais sans <p> ni meta description : ok reste True,
+    contenu est None et contenu_vide passe à True (cas site anti-scraping / JS).
+    """
+    url = "https://protege.test/article"
+    html = "<html><head><title>Titre</title></head><body><div>nav uniquement</div></body></html>"
+    _mock_httpx_get(monkeypatch, response=_reponse_html(200, url, html))
+
+    res = fetch_page(url)
+
+    assert res.ok is True
+    assert res.error is None
+    assert res.contenu is None
+    assert res.contenu_vide is True
+    assert res.titre == "Titre"
+
+
+def test_fetch_page_repli_og_description(monkeypatch):
+    """Pas de <p> exploitable mais un <meta property="og:description"> :
+    on retombe dessus, contenu_vide reste False.
+    """
+    url = "https://protege.test/og"
+    html = (
+        "<html><head><title>T</title>"
+        '<meta property="og:description" content="Un résumé fourni par la page.">'
+        "</head><body><div></div></body></html>"
+    )
+    _mock_httpx_get(monkeypatch, response=_reponse_html(200, url, html))
+
+    res = fetch_page(url)
+
+    assert res.ok is True
+    assert res.contenu == "Un résumé fourni par la page."
+    assert res.contenu_vide is False
+
+
+def test_fetch_page_repli_meta_description(monkeypatch):
+    """Repli secondaire sur <meta name="description"> quand og:description manque."""
+    url = "https://protege.test/desc"
+    html = (
+        "<html><head><title>T</title>"
+        '<meta name="description" content="Description meta classique.">'
+        "</head><body><p>   </p></body></html>"
+    )
+    _mock_httpx_get(monkeypatch, response=_reponse_html(200, url, html))
+
+    res = fetch_page(url)
+
+    assert res.contenu == "Description meta classique."
+    assert res.contenu_vide is False

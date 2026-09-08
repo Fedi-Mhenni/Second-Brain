@@ -11,8 +11,8 @@
 
         {% if erreur == "aucun_contenu" %}
             <p class="erreur">Aucun contenu brut à digérer pour cette source.</p>
-        {% elif erreur == "resume_vide" %}
-            <p class="erreur">Le résumé ne peut pas être vide.</p>
+        {% elif erreur == "digestion_vide" %}
+            <p class="erreur">Renseigne au moins le contenu à coller ou un résumé.</p>
         {% endif %}
 
         {% if source.url and source.url.lower().startswith(("http://", "https://")) %}
@@ -150,17 +150,39 @@
                 <p class="vide">Pas encore digérée.</p>
             {% endif %}
 
-            <form method="post" action="/liste/{{ source.id }}/digerer/auto">
-                <button type="submit" class="bouton">Digérer avec l'IA</button>
-            </form>
+            {% if source.contenu_brut and source.contenu_brut.strip() %}
+                {# Contenu disponible : digestion IA + édition du résumé, comme avant. #}
+                <form method="post" action="/liste/{{ source.id }}/digerer/auto">
+                    <button type="submit" class="bouton">Digérer avec l'IA</button>
+                </form>
 
-            <form method="post" action="/liste/{{ source.id }}/digerer">
-                <div class="champ">
-                    <label for="resume">Résumé (édition manuelle)</label>
-                    <textarea id="resume" name="resume" rows="4">{{ source.article.resume if source.article else "" }}</textarea>
-                </div>
-                <button type="submit" class="bouton">Enregistrer le résumé</button>
-            </form>
+                <form method="post" action="/liste/{{ source.id }}/digerer">
+                    <div class="champ">
+                        <label for="resume">Résumé (édition manuelle)</label>
+                        <textarea id="resume" name="resume" rows="4">{{ source.article.resume if source.article else "" }}</textarea>
+                    </div>
+                    <button type="submit" class="bouton">Enregistrer le résumé</button>
+                </form>
+            {% else %}
+                {# L'extraction automatique n'a rien donné (site anti-scraping ou
+                   contenu chargé en JavaScript). On propose de coller le texte. #}
+                <p class="erreur">
+                    Le contenu n'a pas pu être extrait automatiquement (site protégé
+                    contre le scraping, ou contenu chargé en JavaScript). Colle le
+                    texte manuellement ci-dessous pour pouvoir le digérer.
+                </p>
+                <form method="post" action="/liste/{{ source.id }}/digerer">
+                    <div class="champ">
+                        <label for="contenu">Contenu de la source (collé à la main)</label>
+                        <textarea id="contenu" name="contenu" rows="10" placeholder="Colle ici le texte de l'article…"></textarea>
+                    </div>
+                    <div class="champ">
+                        <label for="resume">Résumé (facultatif — tu pourras aussi « Digérer avec l'IA » après avoir enregistré le contenu)</label>
+                        <textarea id="resume" name="resume" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="bouton">Enregistrer</button>
+                </form>
+            {% endif %}
         </section>
 
         {# ---------- Tags ---------- #}

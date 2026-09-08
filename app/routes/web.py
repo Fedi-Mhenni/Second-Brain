@@ -201,20 +201,32 @@ def fiche_digerer_auto_route(source_id: int, db: Session = Depends(get_db)):
 
 @router.post("/liste/{source_id}/digerer")
 def fiche_digerer_manuel_route(
-    source_id: int, db: Session = Depends(get_db), resume: str = Form(default="")
+    source_id: int,
+    db: Session = Depends(get_db),
+    resume: str = Form(default=""),
+    contenu: str = Form(default=""),
 ):
-    """Édite manuellement le résumé de l'Article, revient sur la fiche.
+    """Digestion manuelle depuis la fiche : résumé et/ou contenu collé à la main.
 
-    Seul ``resume`` est modifiable depuis la fiche (pas titre/contenu) : le
-    reste de l'Article vient de la digestion, manuelle ou automatique.
+    ``contenu`` n'est proposé par le template que lorsque l'extraction
+    automatique a échoué (``source.contenu_brut`` vide) : on le remonte alors
+    sur la Source pour que « Digérer avec l'IA » redevienne possible ensuite,
+    en plus de le passer à ``digerer_source``.
     """
+    source = db.get(Source, source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="Source introuvable")
+
+    if contenu.strip() and not (source.contenu_brut or "").strip():
+        source.contenu_brut = contenu.strip()
+
     try:
-        digerer_source(db, source_id, resume=resume)
+        digerer_source(db, source_id, contenu=contenu or None, resume=resume or None)
     except SourceIntrouvableDigest:
         raise HTTPException(status_code=404, detail="Source introuvable")
     except AucunContenuFourni:
         return RedirectResponse(
-            f"/liste/{source_id}?erreur=resume_vide", status_code=303
+            f"/liste/{source_id}?erreur=digestion_vide", status_code=303
         )
 
     return RedirectResponse(f"/liste/{source_id}", status_code=303)

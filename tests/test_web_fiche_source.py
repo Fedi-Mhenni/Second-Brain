@@ -253,7 +253,7 @@ def test_fiche_digerer_manuel_resume_vide_sans_article(client, test_db):
     )
 
     assert r.status_code == 303
-    assert r.headers["location"] == f"/liste/{source_id}?erreur=resume_vide"
+    assert r.headers["location"] == f"/liste/{source_id}?erreur=digestion_vide"
 
     db = test_db()
     source = db.get(Source, source_id)
@@ -277,11 +277,59 @@ def test_fiche_digerer_manuel_resume_vide_avec_article_existant(client, test_db)
     )
 
     assert r.status_code == 303
-    assert r.headers["location"] == f"/liste/{source_id}?erreur=resume_vide"
+    assert r.headers["location"] == f"/liste/{source_id}?erreur=digestion_vide"
 
     db = test_db()
     source = db.get(Source, source_id)
     assert source.article.resume == "Résumé déjà enregistré."
+    assert source.statut == "digested"
+    db.close()
+
+
+def test_fiche_montre_le_formulaire_a_coller_si_contenu_brut_vide(client, test_db):
+    """Source sans contenu_brut : message actionnable + champ ``contenu`` à coller,
+    et pas de bouton « Digérer avec l'IA » (qui échouerait).
+    """
+    source_id = _creer_source(test_db, contenu_brut="")
+
+    page = client.get(f"/liste/{source_id}").text
+
+    assert "n'a pas pu être extrait automatiquement" in page
+    assert 'name="contenu"' in page
+    # Le formulaire de digestion IA n'est pas rendu (il échouerait sans contenu_brut).
+    assert f"/liste/{source_id}/digerer/auto" not in page
+
+
+def test_fiche_avec_contenu_brut_garde_la_digestion_ia(client, test_db):
+    """Source avec contenu_brut : formulaire IA présent, pas de champ ``contenu`` à coller."""
+    source_id = _creer_source(test_db, contenu_brut="Un vrai contenu.")
+
+    page = client.get(f"/liste/{source_id}").text
+
+    assert f"/liste/{source_id}/digerer/auto" in page
+    assert 'name="contenu"' not in page
+
+
+def test_fiche_digerer_manuel_contenu_colle_remonte_sur_la_source(client, test_db):
+    """Contenu collé quand l'extraction a échoué : il est remonté sur
+    ``Source.contenu_brut`` (pour l'IA ensuite) et l'Article est digéré.
+    """
+    source_id = _creer_source(test_db, contenu_brut="")
+
+    r = client.post(
+        f"/liste/{source_id}/digerer",
+        data={"contenu": "Texte de l'article collé à la main."},
+        follow_redirects=False,
+    )
+
+    assert r.status_code == 303
+    assert r.headers["location"] == f"/liste/{source_id}"
+
+    db = test_db()
+    source = db.get(Source, source_id)
+    assert source.contenu_brut == "Texte de l'article collé à la main."
+    assert source.article is not None
+    assert source.article.contenu == "Texte de l'article collé à la main."
     assert source.statut == "digested"
     db.close()
 

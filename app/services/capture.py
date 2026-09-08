@@ -44,15 +44,22 @@ _TITRE_MAX = 120
 class FetchResult:
     """Résultat d'une tentative de récupération de page.
 
-    ``ok`` indique si le fetch a réussi. En cas d'échec, ``error`` porte un code
-    court (``timeout``, ``unreachable``, ``http_404``…) et ``titre`` / ``contenu``
-    restent ``None``.
+    ``ok`` indique si la requête HTTP a réussi. En cas d'échec réseau/HTTP,
+    ``error`` porte un code court (``timeout``, ``unreachable``, ``http_404``…)
+    et ``titre`` / ``contenu`` restent ``None``.
+
+    Cas particulier : ``ok=True`` mais ``contenu_vide=True`` — la page a bien
+    répondu (HTTP 200) mais aucun texte exploitable n'a pu en être extrait
+    (site anti-scraping, contenu rendu en JavaScript…). Ce n'est pas un échec
+    réseau : ``ok`` reste ``True``, mais l'appelant peut le distinguer pour
+    afficher un message actionnable.
     """
 
     ok: bool
     titre: str | None = None
     contenu: str | None = None
     error: str | None = None
+    contenu_vide: bool = False
 
 
 def fetch_page(url: str) -> FetchResult:
@@ -82,7 +89,10 @@ def fetch_page(url: str) -> FetchResult:
         return FetchResult(ok=False, error="unreachable")
 
     titre, contenu = _extraire(response.text)
-    return FetchResult(ok=True, titre=titre, contenu=contenu)
+    # HTTP 200 mais rien à digérer : on le signale sans changer ``ok``.
+    return FetchResult(
+        ok=True, titre=titre, contenu=contenu, contenu_vide=contenu is None
+    )
 
 
 def _extraire(html: str) -> tuple[str | None, str | None]:
@@ -111,6 +121,16 @@ def _extraire(html: str) -> tuple[str | None, str | None]:
     paragraphes = [p.get_text(" ", strip=True) for p in racine.find_all("p")]
     # On assemble les paragraphes non vides, puis on tronque.
     contenu = "\n\n".join(p for p in paragraphes if p)[:_MAX_CONTENU] or None
+
+    # Repli : pas de <p> exploitable (page anti-scraping, contenu en JS…) mais
+    # souvent un résumé dans les meta ``og:description`` / ``description``.
+    if contenu is None:
+        for attrs in ({"property": "og:description"}, {"name": "description"}):
+            meta = soup.find("meta", attrs=attrs)
+            valeur = (meta.get("content") or "").strip() if meta else ""
+            if valeur:
+                contenu = valeur[:_MAX_CONTENU]
+                break
 
     return titre, contenu
 
